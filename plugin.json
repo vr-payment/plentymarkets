@@ -1,0 +1,59 @@
+{
+	"name": "vRPayment",
+	"marketplaceName": {
+		"de": "VR Payment E-Commerce Hub",
+		"en": "VR Payment e-commerce hub"
+	},
+	"namespace": "VRPayment",
+	"type": "payment",
+	"version": "2.1.7",
+	"license": " Apache License Version 2",
+	"isClosedSource": false,
+	"pluginIcon": "icon_plugin_md.png",
+	"price": 0.00,
+	"description": "The official VR Payment plugin for plentymarkets.",
+	"shortDescription": {
+		"de": "Ein Plugin - 50+ PSPs. Mit dem VR Payment Plugin verbinden Sie direkt zu Ihrem gewünschten PSP und akzeptieren Kreditkarten, Rechnungen, SOFORT, Alipay, usw. ",
+		"en": "Connect to over 50+ Payment Service Provider. Process credit cards, Sofort, Paydirekt, PayPal, Alipay, and many more."
+	},
+	"categories": [
+		"3519"
+	],
+	"keywords": [
+		"VR Payment",
+		"plentymarkets",
+		"payment",
+		"VR Payment GmbH",
+		"Concardis",
+		"Computop",
+		"Saferpay"
+	],
+	"author": "VR Payment GmbH",
+	"authorIcon": "icon_author_sm.png",
+	"email": "ecommerce@vr-payment.de",
+	"serviceProvider": "VRPayment\\Providers\\VRPaymentServiceProvider",
+	"containers": [],
+	"require": {
+		"IO": ">=3.0.0"
+	},
+	"platform": {
+		"php": ">=7.3 <8.1"
+	},
+	"dependencies": {
+		"vrpayment/sdk": "4.8.1"
+	},
+	"runOnBuild": [
+		"VRPayment\\Migrations\\CreatePaymentMethods",
+		"VRPayment\\Migrations\\CreateWebhooks",
+		"VRPayment\\Migrations\\CreateWebhookTable",
+		"VRPayment\\Migrations\\UpdateWebhookSpaceId"
+	],
+	"dataProviders": [
+		{
+			"key": "VRPayment\\Providers\\DataProvider\\PaymentInformation",
+			"name": "VR Payment Payment Information",
+			"description": "Display information about the VR Payment payment on the checkout page.",
+			"defaultLayoutContainer": "Ceres::OrderConfirmation.AdditionalPaymentInformation"
+		}
+	]
+}
