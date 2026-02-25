@@ -107,7 +107,7 @@ class KlarnaPayLaterPaymentMethod extends AbstractPaymentMethod
         if (!empty($iconUrl)) {
             return $iconUrl;
         } else {
-            return $this->getImagePath('');
+            return $this->getImagePath('klarna.svg');
         }
     }
 }

@@ -3,6 +3,7 @@ use VRPayment\Sdk\Model\WebhookUrlCreate;
 use VRPayment\Sdk\Model\WebhookListenerCreate;
 use VRPayment\Sdk\Service\WebhookUrlService;
 use VRPayment\Sdk\Service\WebhookListenerService;
+use VRPayment\Sdk\Model\WebhookListenerUpdate;
 
 require_once __DIR__ . '/VRPaymentSdkHelper.php';
 
@@ -98,6 +99,16 @@ foreach ($webhookEntities as $webhookEntity) {
     foreach ($existingListeners as $existingListener) {
         if ($existingListener->getEntity() == $webhookEntity->getId()) {
             $exists = true;
+
+            if (!$existingListener->getEnablePayloadSignatureAndState()) {
+
+                $webhookListenerRequest = new WebhookListenerUpdate();
+                $webhookListenerRequest->setId($existingListener->getId());
+                $webhookListenerRequest->setVersion($existingListener->getVersion());
+                $webhookListenerRequest->setEnablePayloadSignatureAndState(true);
+
+                $webhookListenerService->update($spaceId, $webhookListenerRequest);
+            }
         }
     }
 
