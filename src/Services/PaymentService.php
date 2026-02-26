@@ -277,10 +277,18 @@ class PaymentService
             ];
         }
 
-        return [
+        $result = [
             'type' => GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL,
             'content' => $paymentPageUrl
         ];
+        
+        $this->getLogger(__METHOD__)->debug('vRPayment::PaymentResult', [
+            'result' => $result,
+            'typeConstant' => GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL,
+            'paymentPageUrl' => $paymentPageUrl
+        ]);
+        
+        return $result;
     }
 
     private function getLineItemAttributes(Order $order)

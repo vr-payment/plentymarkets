@@ -71,17 +71,72 @@ class VRPaymentServiceProviderHelper
     public function addExecutePaymentContentEventListener() {
         $this->eventDispatcher->listen(ExecutePayment::class, function (ExecutePayment $event) {
             
-            $eventOrderId = $this->orderRepository->findById($event->getOrderId());
-            $eventMop = $this->paymentMethodService->findByPaymentMethodId($event->getMop());
+            $this->getLogger(__METHOD__)->debug('VRPayment::ExecutePaymentEvent', [
+                'orderId' => $event->getOrderId(),
+                'mop' => $event->getMop()
+            ]);
+            
+            try {
+                $eventOrderId = $this->orderRepository->findById($event->getOrderId());
+                if (!$eventOrderId) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::OrderNotFound', [
+                        'orderId' => $event->getOrderId()
+                    ]);
+                    return;
+                }
+                
+                $eventMop = $this->paymentMethodService->findByPaymentMethodId($event->getMop());
+                if (!$eventMop) {
+                    $this->getLogger(__METHOD__)->debug('VRPayment::PaymentMethodNotFound', [
+                        'mop' => $event->getMop()
+                    ]);
+                    return;
+                }
+                
+                $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
+                
+                if ($isVRPayment) {
 
-            if ($eventMop && $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop())) {
+                    $this->getLogger(__METHOD__)->debug('VRPayment::ExecutingPayment', [
+                        'orderId' => $eventOrderId->id,
+                        'mopId' => $event->getMop()
+                    ]);
 
-                $result = $this->paymentService->executePayment(
-                    $eventOrderId,
-                    $eventMop
-                );
-                $event->setValue(isset($result['content']) ? $result['content'] : null);
-                $event->setType(isset($result['type']) ? $result['type'] : '');
+                    $result = $this->paymentService->executePayment(
+                        $eventOrderId,
+                        $eventMop
+                    );
+                    
+                    // Map GetPaymentMethodContent types to ExecutePayment types for PWA compatibility
+                    $type = isset($result['type']) ? $result['type'] : '';
+                    if ($type === GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL || $type === 'redirectUrl') {
+                        $type = 'redirect';
+                    } elseif ($type === GetPaymentMethodContent::RETURN_TYPE_ERROR || $type === 'error') {
+                        $type = 'error';
+                    } elseif ($type === GetPaymentMethodContent::RETURN_TYPE_CONTINUE || $type === 'continue') {
+                        $type = 'continue';
+                    }
+                    
+                    $this->getLogger(__METHOD__)->debug('VRPayment::ExecutePaymentResult', [
+                        'result' => $result,
+                        'originalType' => isset($result['type']) ? $result['type'] : '',
+                        'mappedType' => $type,
+                        'value' => isset($result['content']) ? $result['content'] : null
+                    ]);
+                    
+                    $event->setValue(isset($result['content']) ? $result['content'] : null);
+                    $event->setType($type);
+                } else {
+                    $this->getLogger(__METHOD__)->debug('VRPayment::NotVRPaymentMethod', [
+                        'mop' => $event->getMop(),
+                        'isVRPayment' => false
+                    ]);
+                }
+            } catch (\Exception $e) {
+                $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentException', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
         });
     }
