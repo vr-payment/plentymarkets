@@ -6,7 +6,7 @@
 	},
 	"namespace": "VRPayment",
 	"type": "payment",
-	"version": "2.1.9",
+	"version": "2.1.10",
 	"license": " Apache License Version 2",
 	"isClosedSource": false,
 	"pluginIcon": "icon_plugin_md.png",
