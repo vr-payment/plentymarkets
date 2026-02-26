@@ -74,7 +74,7 @@ class VRPaymentServiceProviderHelper
             $eventOrderId = $this->orderRepository->findById($event->getOrderId());
             $eventMop = $this->paymentMethodService->findByPaymentMethodId($event->getMop());
 
-            if ($eventMop) {
+            if ($eventMop && $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop())) {
 
                 $result = $this->paymentService->executePayment(
                     $eventOrderId,

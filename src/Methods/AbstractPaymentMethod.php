@@ -68,4 +68,15 @@ abstract class AbstractPaymentMethod extends PaymentMethodService
         return false;
     }
 
+    /**
+     * Check if this payment method runs in the background.
+     * Returns false because VR Payment requires redirecting to external payment page.
+     *
+     * @return bool
+     */
+    public function isBackgroundEnabled(): bool
+    {
+        return false;
+    }
+
 }
