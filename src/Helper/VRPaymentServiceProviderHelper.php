@@ -77,72 +77,79 @@ class VRPaymentServiceProviderHelper
             ]);
             
             try {
-                $eventMop = $this->paymentMethodService->findByPaymentMethodId($event->getMop());
-                if (!$eventMop) {
-                    $this->getLogger(__METHOD__)->debug('VRPayment::PaymentMethodNotFound', [
+                // First check if this is a VR Payment method before trying to load it
+                $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
+                
+                if (!$isVRPayment) {
+                    $this->getLogger(__METHOD__)->debug('VRPayment::NotVRPaymentMethod', [
                         'mop' => $event->getMop()
                     ]);
                     return;
                 }
                 
-                $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
+                $this->getLogger(__METHOD__)->debug('VRPayment::IsVRPaymentMethod', [
+                    'mop' => $event->getMop()
+                ]);
                 
-                if ($isVRPayment) {
-                    // PWA: orderId is 0 when ExecutePayment fires, need to work with basket
-                    if ($event->getOrderId() == 0 || empty($event->getOrderId())) {
-                        $this->getLogger(__METHOD__)->debug('VRPayment::PWABasketPayment', [
-                            'mopId' => $event->getMop()
-                        ]);
-                        
-                        // Handle PWA basket-based payment
-                        $result = $this->paymentService->executePaymentFromBasket($eventMop);
-                        
-                    } else {
-                        // Traditional flow: order exists
-                        $eventOrderId = $this->orderRepository->findById($event->getOrderId());
-                        if (!$eventOrderId) {
-                            $this->getLogger(__METHOD__)->error('VRPayment::OrderNotFound', [
-                                'orderId' => $event->getOrderId()
-                            ]);
-                            return;
-                        }
-                        
-                        $this->getLogger(__METHOD__)->debug('VRPayment::ExecutingPayment', [
-                            'orderId' => $eventOrderId->id,
-                            'mopId' => $event->getMop()
-                        ]);
-
-                        $result = $this->paymentService->executePayment(
-                            $eventOrderId,
-                            $eventMop
-                        );
-                    }
-                    
-                    // Map GetPaymentMethodContent types to ExecutePayment types for PWA compatibility
-                    $type = isset($result['type']) ? $result['type'] : '';
-                    if ($type === GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL || $type === 'redirectUrl') {
-                        $type = 'redirect';
-                    } elseif ($type === GetPaymentMethodContent::RETURN_TYPE_ERROR || $type === 'error') {
-                        $type = 'error';
-                    } elseif ($type === GetPaymentMethodContent::RETURN_TYPE_CONTINUE || $type === 'continue') {
-                        $type = 'continue';
-                    }
-                    
-                    $this->getLogger(__METHOD__)->debug('VRPayment::ExecutePaymentResult', [
-                        'result' => $result,
-                        'originalType' => isset($result['type']) ? $result['type'] : '',
-                        'mappedType' => $type,
-                        'value' => isset($result['content']) ? $result['content'] : null
+                // Get VR Payment method object
+                $eventMop = $this->paymentHelper->getVRPaymentMethodByMopId($event->getMop());
+                
+                if (!$eventMop) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::PaymentMethodNull', [
+                        'mop' => $event->getMop()
                     ]);
-                    
-                    $event->setValue(isset($result['content']) ? $result['content'] : null);
-                    $event->setType($type);
-                } else {
-                    $this->getLogger(__METHOD__)->debug('VRPayment::NotVRPaymentMethod', [
-                        'mop' => $event->getMop(),
-                        'isVRPayment' => false
-                    ]);
+                    return;
                 }
+                
+                // PWA: orderId is 0 when ExecutePayment fires, need to work with basket
+                if ($event->getOrderId() == 0 || empty($event->getOrderId())) {
+                    $this->getLogger(__METHOD__)->debug('VRPayment::PWABasketPayment', [
+                        'mopId' => $event->getMop()
+                    ]);
+                    
+                    // Handle PWA basket-based payment
+                    $result = $this->paymentService->executePaymentFromBasket($eventMop);
+                    
+                } else {
+                    // Traditional flow: order exists
+                    $eventOrderId = $this->orderRepository->findById($event->getOrderId());
+                    if (!$eventOrderId) {
+                        $this->getLogger(__METHOD__)->error('VRPayment::OrderNotFound', [
+                            'orderId' => $event->getOrderId()
+                        ]);
+                        return;
+                    }
+                    
+                    $this->getLogger(__METHOD__)->debug('VRPayment::ExecutingPayment', [
+                        'orderId' => $eventOrderId->id,
+                        'mopId' => $event->getMop()
+                    ]);
+
+                    $result = $this->paymentService->executePayment(
+                        $eventOrderId,
+                        $eventMop
+                    );
+                }
+                
+                // Map GetPaymentMethodContent types to ExecutePayment types for PWA compatibility
+                $type = isset($result['type']) ? $result['type'] : '';
+                if ($type === GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL || $type === 'redirectUrl') {
+                    $type = 'redirect';
+                } elseif ($type === GetPaymentMethodContent::RETURN_TYPE_ERROR || $type === 'error') {
+                    $type = 'error';
+                } elseif ($type === GetPaymentMethodContent::RETURN_TYPE_CONTINUE || $type === 'continue') {
+                    $type = 'continue';
+                }
+                
+                $this->getLogger(__METHOD__)->debug('VRPayment::ExecutePaymentResult', [
+                    'result' => $result,
+                    'originalType' => isset($result['type']) ? $result['type'] : '',
+                    'mappedType' => $type,
+                    'value' => isset($result['content']) ? $result['content'] : null
+                ]);
+                
+                $event->setValue(isset($result['content']) ? $result['content'] : null);
+                $event->setType($type);
             } catch (\Exception $e) {
                 $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentException', [
                     'message' => $e->getMessage(),

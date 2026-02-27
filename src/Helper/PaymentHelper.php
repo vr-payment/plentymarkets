@@ -94,6 +94,25 @@ class PaymentHelper
     }
 
     /**
+     * Get VR Payment method object by MOP ID.
+     *
+     * @param int $mopId
+     * @return \Plenty\Modules\Payment\Method\Models\PaymentMethod|null
+     */
+    public function getVRPaymentMethodByMopId($mopId)
+    {
+        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vRPayment');
+        if (! is_null($paymentMethods)) {
+            foreach ($paymentMethods as $paymentMethod) {
+                if ($paymentMethod->id == $mopId) {
+                    return $paymentMethod;
+                }
+            }
+        }
+        return null;
+    }
+
+    /**
      * Create a payment in plentymarkets.
      *
      * @param array $transaction
