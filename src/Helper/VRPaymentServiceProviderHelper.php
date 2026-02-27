@@ -81,13 +81,13 @@ class VRPaymentServiceProviderHelper
                 $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
                 
                 if (!$isVRPayment) {
-                    $this->getLogger(__METHOD__)->debug('VRPayment::NotVRPaymentMethod', [
+                    $this->getLogger(__METHOD__)->error('VRPayment::NotVRPaymentMethod', [
                         'mop' => $event->getMop()
                     ]);
                     return;
                 }
                 
-                $this->getLogger(__METHOD__)->debug('VRPayment::IsVRPaymentMethod', [
+                $this->getLogger(__METHOD__)->error('VRPayment::IsVRPaymentMethod', [
                     'mop' => $event->getMop()
                 ]);
                 
@@ -120,7 +120,7 @@ class VRPaymentServiceProviderHelper
                         return;
                     }
                     
-                    $this->getLogger(__METHOD__)->debug('VRPayment::ExecutingPayment', [
+                    $this->getLogger(__METHOD__)->error('VRPayment::ExecutingPayment', [
                         'orderId' => $eventOrderId->id,
                         'mopId' => $event->getMop()
                     ]);
@@ -141,7 +141,7 @@ class VRPaymentServiceProviderHelper
                     $type = 'continue';
                 }
                 
-                $this->getLogger(__METHOD__)->debug('VRPayment::ExecutePaymentResult', [
+                $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentResult', [
                     'result' => $result,
                     'originalType' => isset($result['type']) ? $result['type'] : '',
                     'mappedType' => $type,
