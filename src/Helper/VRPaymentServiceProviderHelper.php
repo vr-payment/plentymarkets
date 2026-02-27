@@ -77,14 +77,6 @@ class VRPaymentServiceProviderHelper
             ]);
             
             try {
-                $eventOrderId = $this->orderRepository->findById($event->getOrderId());
-                if (!$eventOrderId) {
-                    $this->getLogger(__METHOD__)->error('VRPayment::OrderNotFound', [
-                        'orderId' => $event->getOrderId()
-                    ]);
-                    return;
-                }
-                
                 $eventMop = $this->paymentMethodService->findByPaymentMethodId($event->getMop());
                 if (!$eventMop) {
                     $this->getLogger(__METHOD__)->debug('VRPayment::PaymentMethodNotFound', [
@@ -96,16 +88,35 @@ class VRPaymentServiceProviderHelper
                 $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
                 
                 if ($isVRPayment) {
+                    // PWA: orderId is 0 when ExecutePayment fires, need to work with basket
+                    if ($event->getOrderId() == 0 || empty($event->getOrderId())) {
+                        $this->getLogger(__METHOD__)->debug('VRPayment::PWABasketPayment', [
+                            'mopId' => $event->getMop()
+                        ]);
+                        
+                        // Handle PWA basket-based payment
+                        $result = $this->paymentService->executePaymentFromBasket($eventMop);
+                        
+                    } else {
+                        // Traditional flow: order exists
+                        $eventOrderId = $this->orderRepository->findById($event->getOrderId());
+                        if (!$eventOrderId) {
+                            $this->getLogger(__METHOD__)->error('VRPayment::OrderNotFound', [
+                                'orderId' => $event->getOrderId()
+                            ]);
+                            return;
+                        }
+                        
+                        $this->getLogger(__METHOD__)->debug('VRPayment::ExecutingPayment', [
+                            'orderId' => $eventOrderId->id,
+                            'mopId' => $event->getMop()
+                        ]);
 
-                    $this->getLogger(__METHOD__)->debug('VRPayment::ExecutingPayment', [
-                        'orderId' => $eventOrderId->id,
-                        'mopId' => $event->getMop()
-                    ]);
-
-                    $result = $this->paymentService->executePayment(
-                        $eventOrderId,
-                        $eventMop
-                    );
+                        $result = $this->paymentService->executePayment(
+                            $eventOrderId,
+                            $eventMop
+                        );
+                    }
                     
                     // Map GetPaymentMethodContent types to ExecutePayment types for PWA compatibility
                     $type = isset($result['type']) ? $result['type'] : '';

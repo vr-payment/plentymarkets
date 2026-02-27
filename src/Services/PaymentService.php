@@ -172,6 +172,120 @@ class PaymentService
     }
 
     /**
+     * Creates the payment from basket for PWA (before order is created).
+     *
+     * @param PaymentMethod $paymentMethod
+     * @return array
+     */
+    public function executePaymentFromBasket(PaymentMethod $paymentMethod): array
+    {
+        try {
+            // Ensure webhooks are created
+            $this->createWebhook();
+            
+            $transactionId = $this->session->getPlugin()->getValue('vRPaymentTransactionId');
+            
+            /** @var \IO\Services\BasketService $basketService */
+            $basketService = pluginApp(\IO\Services\BasketService::class);
+            $basket = $basketService->getBasket();
+            $basketForTemplate = $basketService->getBasketForTemplate();
+            
+            $parameters = [
+                'transactionId' => $transactionId,
+                'basket' => [
+                    'currency' => $basket->currency,
+                    'customerId' => $basket->customerId ?? '',
+                    'orderId' => 0, // PWA: Order not created yet
+                    'shippingAmount' => $basket->shippingAmount ?? 0,
+                    'shippingAmountNet' => $basket->shippingAmountNet ?? 0,
+                    'couponDiscount' => $basket->couponDiscount ?? 0,
+                    'paymentAmount' => 0,
+                ],
+                'basketForTemplate' => $basketForTemplate,
+                'basketItems' => $this->getBasketItems($basket),
+                'paymentMethod' => [
+                    'id' => $paymentMethod->id,
+                    'paymentKey' => $paymentMethod->paymentKey
+                ],
+                'billingAddress' => $this->getAddress($this->getBasketBillingAddress($basket)),
+                'shippingAddress' => $this->getAddress($this->getBasketShippingAddress($basket)),
+                'language' => $this->session->getLocaleSettings()->language,
+                'successUrl' => $this->getSuccessUrl(),
+                'failedUrl' => $this->getFailedUrl(),
+                'checkoutUrl' => $this->getCheckoutUrl()
+            ];
+            
+            $this->getLogger(__METHOD__)->debug('vRPayment::BasketTransactionParameters', $parameters);
+            
+            $this->session->getPlugin()->unsetKey('vRPaymentTransactionId');
+            
+            $transaction = $this->sdkService->call('createTransactionFromBasket', $parameters);
+            if (is_array($transaction) && isset($transaction['error']) && $transaction['error']) {
+                $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionError', $transaction);
+                return [
+                    'transactionId' => $transactionId,
+                    'type' => GetPaymentMethodContent::RETURN_TYPE_ERROR,
+                    'content' => $transaction['error_msg'] ?? 'Transaction creation failed'
+                ];
+            }
+            
+            // Store transaction ID for later order association
+            $this->session->getPlugin()->setValue('vRPaymentTransactionId', $transaction['id']);
+            
+            $isFetchPossiblePaymentMethodsEnabled = $this->config->get('vRPayment.enable_payment_fetch');
+            
+            if ($isFetchPossiblePaymentMethodsEnabled == "true") {
+                $hasPossiblePaymentMethods = $this->sdkService->call('hasPossiblePaymentMethods', [
+                    'transactionId' => $transaction['id']
+                ]);
+                if (! $hasPossiblePaymentMethods) {
+                    return [
+                        'transactionId' => $transaction['id'],
+                        'type' => GetPaymentMethodContent::RETURN_TYPE_ERROR,
+                        'content' => 'The selected payment method is not available.'
+                    ];
+                }
+            }
+            
+            $paymentPageUrl = $this->sdkService->call('buildPaymentPageUrl', [
+                'id' => $transaction['id']
+            ]);
+            
+            if (is_array($paymentPageUrl) && isset($paymentPageUrl['error'])) {
+                $this->getLogger(__METHOD__)->error('vRPayment::PaymentPageUrlError', $paymentPageUrl);
+                return [
+                    'transactionId' => $transaction['id'],
+                    'type' => GetPaymentMethodContent::RETURN_TYPE_ERROR,
+                    'content' => $paymentPageUrl['error_msg'] ?? 'Payment page URL generation failed'
+                ];
+            }
+            
+            $result = [
+                'type' => GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL,
+                'content' => $paymentPageUrl
+            ];
+            
+            $this->getLogger(__METHOD__)->debug('vRPayment::BasketPaymentResult', [
+                'result' => $result,
+                'transactionId' => $transaction['id'],
+                'paymentPageUrl' => $paymentPageUrl
+            ]);
+            
+            return $result;
+            
+        } catch (\Exception $e) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketPaymentException', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [
+                'type' => GetPaymentMethodContent::RETURN_TYPE_ERROR,
+                'content' => 'An error occurred while processing the payment.'
+            ];
+        }
+    }
+
+    /**
      * Creates the payment in plentymarkets.
      *
      * @param Order $order
@@ -535,9 +649,14 @@ class PaymentService
         $items = [];
         /** @var BasketItem $basketItem */
         foreach ($basket->basketItems as $basketItem) {
-            $item = $basketItem->getAttributes();
-            $item['name'] = $this->getBasketItemName($basketItem);
-            $items[] = $item;
+            $items[] = [
+                'plenty_basket_row_item_variation_id' => $basketItem->variationId,
+                'itemId' => $basketItem->itemId,
+                'name' => $this->getBasketItemName($basketItem),
+                'quantity' => $basketItem->quantity,
+                'price' => $basketItem->price,
+                'vat' => $basketItem->vat
+            ];
         }
         return $items;
     }
