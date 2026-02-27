@@ -39,6 +39,7 @@ use IO\Services\BasketService;
 
 class VRPaymentServiceProvider extends ServiceProvider
 {
+    use \Plenty\Plugin\Log\Loggable;
 
     public function register()
     {
@@ -59,6 +60,10 @@ class VRPaymentServiceProvider extends ServiceProvider
         VRPaymentServiceProviderHelper $vRPaymentServiceProviderHelper,
         PaymentService $paymentService
     ) {
+        $this->getLogger(__METHOD__)->error('VRPayment::ServiceProviderBoot', [
+            'message' => 'VR Payment Service Provider is booting'
+        ]);
+        
         $this->registerPaymentMethod($payContainer, 1457546097602, BankTransferPaymentMethod::class);
         $this->registerPaymentMethod($payContainer, 1457546097597, CreditDebitCardPaymentMethod::class);
         $this->registerPaymentMethod($payContainer, 1457546097601, DirectDebitSepaPaymentMethod::class);
@@ -80,7 +85,13 @@ class VRPaymentServiceProvider extends ServiceProvider
             'en' => 'Refund the VR Payment payment'
         ], 'VRPayment\Procedures\RefundEventProcedure@run');
 
+        // Register payment event listeners for PWA
+        $vRPaymentServiceProviderHelper->addGetPaymentMethodContentEventListener();
         $vRPaymentServiceProviderHelper->addExecutePaymentContentEventListener();
+        
+        $this->getLogger(__METHOD__)->error('VRPayment::EventListenersRegistered', [
+            'message' => 'Payment event listeners have been registered'
+        ]);
 
         $cronContainer->add(CronContainer::EVERY_FIFTEEN_MINUTES, WebhookCronHandler::class);
     }

@@ -65,15 +65,74 @@ class VRPaymentServiceProviderHelper
     }
 
     /**
+     * Adds the get payment method content event listener for PWA
+     * @return never
+     */
+    public function addGetPaymentMethodContentEventListener() {
+        $this->getLogger(__METHOD__)->error('VRPayment::RegisteringGetPaymentMethodContentListener', [
+            'message' => 'Registering GetPaymentMethodContent listener'
+        ]);
+        
+        $this->eventDispatcher->listen(GetPaymentMethodContent::class, function (GetPaymentMethodContent $event) {
+            
+            $this->getLogger(__METHOD__)->error('VRPayment::GetPaymentMethodContentEvent_FIRED', [
+                'mop' => $event->getMop(),
+                'eventClass' => get_class($event)
+            ]);
+            
+            try {
+                // Check if this is a VR Payment method
+                $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
+                
+                if (!$isVRPayment) {
+                    return;
+                }
+                
+                $this->getLogger(__METHOD__)->debug('VRPayment::IsVRPaymentMethodContent', [
+                    'mop' => $event->getMop()
+                ]);
+                
+                // Get VR Payment method object
+                $eventMop = $this->paymentHelper->getVRPaymentMethodByMopId($event->getMop());
+                
+                if (!$eventMop) {
+                    return;
+                }
+                
+                // Handle PWA basket-based payment
+                $result = $this->paymentService->executePaymentFromBasket($eventMop);
+                
+                $this->getLogger(__METHOD__)->debug('VRPayment::GetPaymentMethodContentResult', [
+                    'result' => $result
+                ]);
+                
+                $event->setValue($result['content'] ?? null);
+                $event->setType($result['type'] ?? '');
+                
+            } catch (\Exception $e) {
+                $this->getLogger(__METHOD__)->error('VRPayment::GetPaymentMethodContentException', [
+                    'message' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
+            }
+        });
+    }
+
+    /**
      * Adds the execute payment content event listener
      * @return never
      */
     public function addExecutePaymentContentEventListener() {
+        $this->getLogger(__METHOD__)->error('VRPayment::RegisteringExecutePaymentListener', [
+            'message' => 'Registering ExecutePayment listener'
+        ]);
+        
         $this->eventDispatcher->listen(ExecutePayment::class, function (ExecutePayment $event) {
             
-            $this->getLogger(__METHOD__)->debug('VRPayment::ExecutePaymentEvent', [
+            $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentEvent_FIRED', [
                 'orderId' => $event->getOrderId(),
-                'mop' => $event->getMop()
+                'mop' => $event->getMop(),
+                'eventClass' => get_class($event)
             ]);
             
             try {

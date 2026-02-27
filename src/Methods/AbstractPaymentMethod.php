@@ -79,4 +79,17 @@ abstract class AbstractPaymentMethod extends PaymentMethodService
         return false;
     }
 
+    /**
+     * Get the payment redirect source URL.
+     * PWA uses this for non-background payment methods.
+     *
+     * @param int $orderId
+     * @return string
+     */
+    public function getSourceUrl(int $orderId): string
+    {
+        // Return empty string - actual redirect happens via ExecutePayment event
+        return '';
+    }
+
 }
