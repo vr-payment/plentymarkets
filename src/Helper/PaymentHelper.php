@@ -88,9 +88,9 @@ class PaymentHelper
                 if ($paymentMethod->id == $mopId) {
                     $this->getLogger(__METHOD__)->error('VRPayment::IsVRPaymentMopId_TRUE', [
                         'mopId' => $mopId,
-                        'mopIdType' => gettype($mopId),
                         'paymentMethodId' => $paymentMethod->id,
-                        'paymentMethodIdType' => gettype($paymentMethod->id)
+                        'areEqual' => ($paymentMethod->id == $mopId),
+                        'areIdentical' => ($paymentMethod->id === $mopId)
                     ]);
                     return true;
                 }
@@ -119,7 +119,9 @@ class PaymentHelper
                 $methodIds[] = [
                     'id' => $paymentMethod->id,
                     'paymentKey' => $paymentMethod->paymentKey,
-                    'pluginKey' => $paymentMethod->pluginKey ?? 'null'
+                    'pluginKey' => $paymentMethod->pluginKey ?? 'null',
+                    'matchLoose' => ($paymentMethod->id == $mopId),
+                    'matchStrict' => ($paymentMethod->id === $mopId)
                 ];
                 if ($paymentMethod->id == $mopId) {
                     $this->getLogger(__METHOD__)->error('VRPayment::FoundPaymentMethod', [
@@ -136,9 +138,9 @@ class PaymentHelper
         
         $this->getLogger(__METHOD__)->error('VRPayment::PaymentMethodNotFoundInCollection', [
             'searchingForMopId' => $mopId,
-            'searchingForMopIdType' => gettype($mopId),
             'availableVRPaymentMethods' => $methodIds,
-            'paymentMethodsIsNull' => is_null($paymentMethods)
+            'paymentMethodsIsNull' => is_null($paymentMethods),
+            'paymentMethodsCount' => is_null($paymentMethods) ? 0 : count($paymentMethods)
         ]);
         
         return null;
