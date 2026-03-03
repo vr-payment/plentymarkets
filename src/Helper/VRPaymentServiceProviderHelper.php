@@ -129,22 +129,35 @@ class VRPaymentServiceProviderHelper
             ]);
             
             try {
-                // First check if this is a VR Payment method before trying to load it
-                $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
+                // Get the basket to check what payment method the user actually selected
+                /** @var \IO\Services\BasketService $basketService */
+                $basketService = pluginApp(\IO\Services\BasketService::class);
+                $basket = $basketService->getBasket();
+                
+                $selectedPaymentMethodId = $basket->methodOfPaymentId ?? $event->getMop();
+                
+                $this->getLogger(__METHOD__)->error('VRPayment::CheckingPaymentMethod', [
+                    'eventMop' => $event->getMop(),
+                    'basketMethodOfPaymentId' => $basket->methodOfPaymentId ?? 'null',
+                    'selectedPaymentMethodId' => $selectedPaymentMethodId
+                ]);
+                
+                // Check if the selected payment method (from basket) is a VR Payment method
+                $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($selectedPaymentMethodId);
                 
                 if (!$isVRPayment) {
                     $this->getLogger(__METHOD__)->error('VRPayment::NotVRPaymentMethod', [
-                        'mop' => $event->getMop()
+                        'selectedPaymentMethodId' => $selectedPaymentMethodId
                     ]);
                     return;
                 }
                 
                 $this->getLogger(__METHOD__)->error('VRPayment::IsVRPaymentMethod', [
-                    'mop' => $event->getMop()
+                    'selectedPaymentMethodId' => $selectedPaymentMethodId
                 ]);
                 
                 // Get VR Payment method object
-                $eventMop = $this->paymentHelper->getVRPaymentMethodByMopId($event->getMop());
+                $eventMop = $this->paymentHelper->getVRPaymentMethodByMopId($selectedPaymentMethodId);
                 
                 if (!$eventMop) {
                     $this->getLogger(__METHOD__)->error('VRPayment::PaymentMethodNull', [
