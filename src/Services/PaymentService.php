@@ -195,7 +195,9 @@ class PaymentService
                 'basketAmount' => $basket->basketAmount ?? 'null',
                 'basketItemsCount' => count($basket->basketItems ?? []),
                 'sessionId' => $basket->sessionId,
-                'methodOfPaymentId' => $basket->methodOfPaymentId ?? 'null'
+                'methodOfPaymentId' => $basket->methodOfPaymentId ?? 'null',
+                'customerInvoiceAddressId' => $basket->customerInvoiceAddressId ?? 'null',
+                'customerShippingAddressId' => $basket->customerShippingAddressId ?? 'null'
             ]);
             
             // Generate temporary merchant reference for PWA (order doesn't exist yet)
@@ -219,25 +221,44 @@ class PaymentService
                     'id' => $paymentMethod->id,
                     'paymentKey' => $paymentMethod->paymentKey
                 ],
-                'billingAddress' => $this->getAddress($this->getBasketBillingAddress($basket)),
-                'shippingAddress' => $this->getAddress($this->getBasketShippingAddress($basket)),
+                'billingAddress' => $this->getBasketBillingAddressSafe($basket),
+                'shippingAddress' => $this->getBasketShippingAddressSafe($basket),
                 'language' => $this->session->getLocaleSettings()->language,
                 'successUrl' => $this->getSuccessUrl(),
                 'failedUrl' => $this->getFailedUrl(),
                 'checkoutUrl' => $this->getCheckoutUrl()
             ];
             
-            $this->getLogger(__METHOD__)->debug('vRPayment::BasketTransactionParameters', $parameters);
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionParameters', $parameters);
             
             $this->session->getPlugin()->unsetKey('vRPaymentTransactionId');
             
-            $transaction = $this->sdkService->call('createTransactionFromBasket', $parameters);
-            if (is_array($transaction) && isset($transaction['error']) && $transaction['error']) {
-                $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionError', $transaction);
+            try {
+                $transaction = $this->sdkService->call('createTransactionFromBasket', $parameters);
+                
+                $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionCreated', [
+                    'transactionId' => $transaction['id'] ?? 'null',
+                    'state' => $transaction['state'] ?? 'null',
+                    'amount' => $transaction['authorization_amount'] ?? 'null'
+                ]);
+                
+                if (is_array($transaction) && isset($transaction['error']) && $transaction['error']) {
+                    $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionError', $transaction);
+                    return [
+                        'transactionId' => $transactionId,
+                        'type' => GetPaymentMethodContent::RETURN_TYPE_ERROR,
+                        'content' => $transaction['error_msg'] ?? 'Transaction creation failed'
+                    ];
+                }
+            } catch (\Exception $e) {
+                $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionException', [
+                    'exception' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
                 return [
                     'transactionId' => $transactionId,
                     'type' => GetPaymentMethodContent::RETURN_TYPE_ERROR,
-                    'content' => $transaction['error_msg'] ?? 'Transaction creation failed'
+                    'content' => 'Failed to create transaction: ' . $e->getMessage()
                 ];
             }
             
@@ -627,6 +648,60 @@ class PaymentService
     }
 
     /**
+     * Safely get basket billing address with error handling
+     *
+     * @param Basket $basket
+     * @return array
+     */
+    private function getBasketBillingAddressSafe(Basket $basket): array
+    {
+        try {
+            $address = $this->getBasketBillingAddress($basket);
+            return $this->getAddress($address);
+        } catch (\Exception $e) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BillingAddressError', [
+                'error' => $e->getMessage(),
+                'addressId' => $basket->customerInvoiceAddressId ?? 'null'
+            ]);
+            // Return minimal valid address structure
+            return [
+                'city' => '',
+                'gender' => '',
+                'country' => 'DE',
+                'dateOfBirth' => null,
+                'emailAddress' => '',
+                'familyName' => '',
+                'givenName' => '',
+                'organisationName' => '',
+                'phoneNumber' => '',
+                'postCode' => '',
+                'street' => ''
+            ];
+        }
+    }
+
+    /**
+     * Safely get basket shipping address with error handling
+     *
+     * @param Basket $basket
+     * @return array
+     */
+    private function getBasketShippingAddressSafe(Basket $basket): array
+    {
+        try {
+            $address = $this->getBasketShippingAddress($basket);
+            return $this->getAddress($address);
+        } catch (\Exception $e) {
+            $this->getLogger(__METHOD__)->error('vRPayment::ShippingAddressError', [
+                'error' => $e->getMessage(),
+                'addressId' => $basket->customerShippingAddressId ?? 'null'
+            ]);
+            // Fallback to billing address
+            return $this->getBasketBillingAddressSafe($basket);
+        }
+    }
+
+    /**
      *
      * @param Address $address
      * @return array
@@ -672,6 +747,12 @@ class PaymentService
                 'vat' => $basketItem->vat
             ];
         }
+        
+        $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsFormatted', [
+            'itemCount' => count($items),
+            'items' => $items
+        ]);
+        
         return $items;
     }
 
