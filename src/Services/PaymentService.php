@@ -204,6 +204,8 @@ class PaymentService
             // Use session ID + timestamp to ensure uniqueness
             $tempMerchantRef = 'PWA_' . $basket->sessionId . '_' . time();
             
+            $basketItems = $this->getBasketItems($basket);
+            
             $parameters = [
                 'transactionId' => $transactionId,
                 'basket' => [
@@ -214,9 +216,9 @@ class PaymentService
                     'shippingAmountNet' => $basket->shippingAmountNet ?? 0,
                     'couponDiscount' => $basket->couponDiscount ?? 0,
                     'paymentAmount' => 0,
+                    'items' => $basketItems, // Items must be INSIDE basket, not at root level
                 ],
                 'basketForTemplate' => $basketForTemplate,
-                'basketItems' => $this->getBasketItems($basket),
                 'paymentMethod' => [
                     'id' => $paymentMethod->id,
                     'paymentKey' => $paymentMethod->paymentKey
