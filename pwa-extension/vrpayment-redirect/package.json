@@ -1,0 +1,7 @@
+{
+  "name": "@vrpayment/redirect-handler",
+  "version": "1.0.0",
+  "description": "VR Payment redirect handler for plentyShop PWA",
+  "type": "module",
+  "main": "./nuxt.config.ts"
+}
