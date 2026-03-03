@@ -125,8 +125,7 @@ class VRPaymentServiceProviderHelper
             
             $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentEvent_FIRED', [
                 'orderId' => $event->getOrderId(),
-                'mop' => $event->getMop(),
-                'eventClass' => get_class($event)
+                'mop' => $event->getMop()
             ]);
             
             try {

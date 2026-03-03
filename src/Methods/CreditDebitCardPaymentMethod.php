@@ -15,11 +15,14 @@ class CreditDebitCardPaymentMethod extends AbstractPaymentMethod
      */
     public function isActive(): bool
     {
-        if ($this->configRepo->get('vRPayment.CreditDebitCard_active') == "true") {
-            return true;
-        } else {
-            return false;
-        }
+        $isActive = $this->configRepo->get('vRPayment.CreditDebitCard_active') == "true";
+        
+        $this->getLogger(__METHOD__)->error('VRPayment::CreditDebitCard_isActive_CALLED', [
+            'configValue' => $this->configRepo->get('vRPayment.CreditDebitCard_active'),
+            'isActive' => $isActive
+        ]);
+        
+        return $isActive;
     }
     
     /**

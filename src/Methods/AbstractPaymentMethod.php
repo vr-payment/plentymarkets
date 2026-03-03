@@ -76,12 +76,16 @@ abstract class AbstractPaymentMethod extends PaymentMethodService
      */
     public function isBackgroundEnabled(): bool
     {
-        /** @var \Plenty\Plugin\Log\Loggable $loggable */
-        $loggable = pluginApp(\Plenty\Plugin\Log\Loggable::class);
-        $loggable->getLogger(__METHOD__)->error('VRPayment::isBackgroundEnabled_CALLED', [
-            'paymentMethod' => get_class($this),
-            'returning' => false
-        ]);
+        try {
+            /** @var \Plenty\Plugin\Log\Loggable $loggable */
+            $loggable = pluginApp(\Plenty\Plugin\Log\Loggable::class);
+            $loggable->getLogger('VRPayment')->error('VRPayment::isBackgroundEnabled_CALLED', [
+                'class' => static::class,
+                'returning' => false
+            ]);
+        } catch (\Exception $e) {
+            // Silently fail if logging doesn't work
+        }
         
         return false;
     }
