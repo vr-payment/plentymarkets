@@ -190,12 +190,16 @@ class PaymentService
             $basket = $basketService->getBasket();
             $basketForTemplate = $basketService->getBasketForTemplate();
             
+            // Generate temporary merchant reference for PWA (order doesn't exist yet)
+            // Use session ID + timestamp to ensure uniqueness
+            $tempMerchantRef = 'PWA_' . $basket->sessionId . '_' . time();
+            
             $parameters = [
                 'transactionId' => $transactionId,
                 'basket' => [
                     'currency' => $basket->currency,
                     'customerId' => $basket->customerId ?? '',
-                    'orderId' => 0, // PWA: Order not created yet
+                    'orderId' => $tempMerchantRef, // PWA: Use temp reference until order is created
                     'shippingAmount' => $basket->shippingAmount ?? 0,
                     'shippingAmountNet' => $basket->shippingAmountNet ?? 0,
                     'couponDiscount' => $basket->couponDiscount ?? 0,

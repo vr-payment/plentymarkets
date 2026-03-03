@@ -181,12 +181,38 @@ class PaymentProcessController extends Controller
         }
 
         $payments = $this->paymentRepository->getPaymentsByPropertyTypeAndValue(PaymentProperty::TYPE_TRANSACTION_ID, $transaction['id']);
-        $payment = $payments[0];
-
-        $orderRelation = $this->paymentOrderRelationRepository->findOrderRelation($payment);
-        $order = $this->orderRepository->findOrderById($orderRelation->orderId);
-
-        $paymentMethodId = $this->orderHelper->getOrderPropertyValue($order, OrderPropertyType::PAYMENT_METHOD);
+        $payment = !empty($payments) ? $payments[0] : null;
+        
+        $order = null;
+        $paymentMethodId = null;
+        
+        // Try to find order via payment relation
+        if ($payment) {
+            $orderRelation = $this->paymentOrderRelationRepository->findOrderRelation($payment);
+            if ($orderRelation) {
+                $order = $this->orderRepository->findOrderById($orderRelation->orderId);
+            }
+        }
+        
+        // If no payment record, try to find order by transaction merchant reference
+        if (!$order && isset($transaction['merchantReference'])) {
+            try {
+                $order = $this->orderRepository->findOrderById($transaction['merchantReference']);
+                $this->getLogger(__METHOD__)->debug('vRPayment::FoundOrderByMerchantReference', [
+                    'orderId' => $transaction['merchantReference'],
+                    'transactionId' => $transaction['id']
+                ]);
+            } catch (\Exception $e) {
+                $this->getLogger(__METHOD__)->error('vRPayment::OrderNotFoundByMerchantReference', [
+                    'merchantReference' => $transaction['merchantReference'],
+                    'error' => $e->getMessage()
+                ]);
+            }
+        }
+        
+        if ($order) {
+            $paymentMethodId = $this->orderHelper->getOrderPropertyValue($order, OrderPropertyType::PAYMENT_METHOD);
+        }
 
         $errorMessage = $this->frontendSession->getPlugin()->getValue('vRPaymentPayErrorMessage');
         if ($errorMessage) {
@@ -200,18 +226,29 @@ class PaymentProcessController extends Controller
         if (! is_null($order) && ! ($order instanceof LocalizedOrder)) {
             $order = LocalizedOrder::wrap($order, $this->sessionStorage->getLang());
         }
-
-        return $twig->render('vRPayment::Failure', [
+        
+        // Prepare template data
+        $templateData = [
             'transaction' => $transaction,
             'payment' => $payment,
             'bodyClasses' => ['page-confirmation'],
             'orderData' => $order,
-            'totals' => pluginApp(OrderTotalsService::class)->getAllTotals($order->order),
             'currentPaymentMethodId' => $paymentMethodId,
-            'allowSwitchPaymentMethod' => $this->allowSwitchPaymentMethod($order->order->id),
-            'paymentMethodListForSwitch' => $this->getPaymentMethodListForSwitch($paymentMethodId, $order->order->id),
             'payOrderFormUrl' => sprintf('/%s/vrpayment/pay-order/', $lang)
-        ]);
+        ];
+        
+        // Only add order-dependent data if order exists
+        if ($order) {
+            $templateData['totals'] = pluginApp(OrderTotalsService::class)->getAllTotals($order->order);
+            $templateData['allowSwitchPaymentMethod'] = $this->allowSwitchPaymentMethod($order->order->id);
+            $templateData['paymentMethodListForSwitch'] = $this->getPaymentMethodListForSwitch($paymentMethodId, $order->order->id);
+        } else {
+            $templateData['totals'] = null;
+            $templateData['allowSwitchPaymentMethod'] = false;
+            $templateData['paymentMethodListForSwitch'] = [];
+        }
+
+        return $twig->render('vRPayment::Failure', $templateData);
     }
 
     /**
