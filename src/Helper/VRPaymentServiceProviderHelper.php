@@ -131,12 +131,12 @@ class VRPaymentServiceProviderHelper
                 // First check if this is a VR Payment method before trying to load it
                 $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
                 
-                // if (!$isVRPayment) {
-                //     $this->getLogger(__METHOD__)->error('VRPayment::NotVRPaymentMethod', [
-                //         'mop' => $event->getMop()
-                //     ]);
-                //     return;
-                // }
+                if (!$isVRPayment) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::NotVRPaymentMethod', [
+                        'mop' => $event->getMop()
+                    ]);
+                    return;
+                }
                 
                 $this->getLogger(__METHOD__)->error('VRPayment::IsVRPaymentMethod', [
                     'mop' => $event->getMop()
