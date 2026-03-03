@@ -72,8 +72,7 @@ class VRPaymentServiceProviderHelper
         $this->eventDispatcher->listen(GetPaymentMethodContent::class, function (GetPaymentMethodContent $event) {
             
             $this->getLogger(__METHOD__)->error('VRPayment::GetPaymentMethodContentEvent_FIRED', [
-                'mop' => $event->getMop(),
-                'eventClass' => get_class($event)
+                'mop' => $event->getMop()
             ]);
             
             try {
@@ -81,6 +80,9 @@ class VRPaymentServiceProviderHelper
                 $isVRPayment = $this->paymentHelper->isVRPaymentPaymentMopId($event->getMop());
                 
                 if (!$isVRPayment) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::GetPaymentMethodContent_NotVRPayment', [
+                        'mop' => $event->getMop()
+                    ]);
                     return;
                 }
                 
