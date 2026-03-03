@@ -17,6 +17,8 @@ class VRPaymentRouteServiceProvider extends RouteServiceProvider
         $router->get('vrpayment/fail-transaction/{id}', 'VRPayment\Controllers\PaymentProcessController@failTransaction')->where('id', '\d+');
         $router->post('vrpayment/pay-order', 'VRPayment\Controllers\PaymentProcessController@payOrder');
         $router->post('rest/storefront/vrpayment/prepare', 'VRPayment\Controllers\PaymentProcessController@preparePayment');
+        $router->get('rest/storefront/vrpayment/check-redirect', 'VRPayment\Controllers\PaymentProcessController@checkPendingRedirect');
+        $router->get('vrpayment/redirect-check', 'VRPayment\Controllers\PaymentProcessController@redirectCheck');
         $router->get('vrpayment/download-invoice/{id}', 'VRPayment\Controllers\PaymentTransactionController@downloadInvoice')->where('id', '\d+');
         $router->get('vrpayment/download-packing-slip/{id}', 'VRPayment\Controllers\PaymentTransactionController@downloadPackingSlip')->where('id', '\d+');
     }

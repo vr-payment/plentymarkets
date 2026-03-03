@@ -54,6 +54,12 @@
 			"name": "VR Payment Payment Information",
 			"description": "Display information about the VR Payment payment on the checkout page.",
 			"defaultLayoutContainer": "Ceres::OrderConfirmation.AdditionalPaymentInformation"
+		},
+		{
+			"key": "VRPayment\\Providers\\DataProvider\\PaymentRedirectHandler",
+			"name": "VR Payment Redirect Handler",
+			"description": "Handles automatic redirect to VR Payment page for PWA checkout.",
+			"defaultLayoutContainer": "Ceres::OrderConfirmation"
 		}
 	]
 }

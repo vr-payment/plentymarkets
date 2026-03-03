@@ -280,6 +280,72 @@ class PaymentProcessController extends Controller
         }
     }
 
+    /**
+     * Check if there's a pending payment redirect for PWA
+     * PWA ignores ExecutePayment redirects, so we store them and check later
+     *
+     * @return Response
+     */
+    public function checkPendingRedirect()
+    {
+        try {
+            $redirectUrl = $this->frontendSession->getPlugin()->getValue('vRPaymentPendingRedirectUrl');
+            
+            if ($redirectUrl) {
+                // Clear the session value
+                $this->frontendSession->getPlugin()->unsetKey('vRPaymentPendingRedirectUrl');
+                
+                $this->getLogger(__METHOD__)->error('VRPayment::ReturningPendingRedirect', [
+                    'redirectUrl' => $redirectUrl
+                ]);
+                
+                return $this->response->json([
+                    'redirect' => true,
+                    'url' => $redirectUrl
+                ]);
+            }
+            
+            return $this->response->json([
+                'redirect' => false
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->getLogger(__METHOD__)->error('VRPayment::CheckRedirectException', [
+                'message' => $e->getMessage()
+            ]);
+            
+            return $this->response->json([
+                'redirect' => false,
+                'error' => $e->getMessage()
+            ]);
+        }
+    }
+
+    /**
+     * Auto-redirect page for PWA
+     * Checks session for pending redirect and redirects immediately
+     *
+     * @param Twig $twig
+     * @return Response
+     */
+    public function redirectCheck(Twig $twig)
+    {
+        $redirectUrl = $this->frontendSession->getPlugin()->getValue('vRPaymentPendingRedirectUrl');
+        
+        if ($redirectUrl) {
+            $this->frontendSession->getPlugin()->unsetKey('vRPaymentPendingRedirectUrl');
+            
+            $this->getLogger(__METHOD__)->error('VRPayment::AutoRedirecting', [
+                'redirectUrl' => $redirectUrl
+            ]);
+            
+            return $this->response->redirectTo($redirectUrl);
+        }
+        
+        // No redirect needed
+        return $this->response->make('No redirect pending', 200);
+    }
+
     public function payOrder(Request $request)
     {
         $orderId = $request->get('orderId', '');

@@ -221,6 +221,18 @@ class VRPaymentServiceProviderHelper
                 $event->setValue(isset($result['content']) ? $result['content'] : null);
                 $event->setType($type);
                 
+                // CRITICAL: Store payment URL in session for PWA redirect after order creation
+                // PWA ignores ExecutePayment modifications when orderId=0, so we need to redirect later
+                if ($type === 'redirect' && !empty($result['content'])) {
+                    /** @var \Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract $session */
+                    $session = pluginApp(\Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract::class);
+                    $session->getPlugin()->setValue('vRPaymentPendingRedirectUrl', $result['content']);
+                    
+                    $this->getLogger(__METHOD__)->error('VRPayment::StoredRedirectInSession', [
+                        'redirectUrl' => $result['content']
+                    ]);
+                }
+                
                 $this->getLogger(__METHOD__)->error('VRPayment::EventValuesAfterSet', [
                     'eventGetValue' => $event->getValue(),
                     'eventGetType' => $event->getType()
