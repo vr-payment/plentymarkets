@@ -190,6 +190,14 @@ class PaymentService
             $basket = $basketService->getBasket();
             $basketForTemplate = $basketService->getBasketForTemplate();
             
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketData', [
+                'basketCurrency' => $basket->currency,
+                'basketAmount' => $basket->basketAmount ?? 'null',
+                'basketItemsCount' => count($basket->basketItems ?? []),
+                'sessionId' => $basket->sessionId,
+                'methodOfPaymentId' => $basket->methodOfPaymentId ?? 'null'
+            ]);
+            
             // Generate temporary merchant reference for PWA (order doesn't exist yet)
             // Use session ID + timestamp to ensure uniqueness
             $tempMerchantRef = 'PWA_' . $basket->sessionId . '_' . time();
