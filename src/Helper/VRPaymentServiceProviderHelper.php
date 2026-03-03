@@ -121,6 +121,7 @@ class VRPaymentServiceProviderHelper
      * @return never
      */
     public function addExecutePaymentContentEventListener() {
+        // Listen with high priority (runs before other handlers)
         $this->eventDispatcher->listen(ExecutePayment::class, function (ExecutePayment $event) {
             
             $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentEvent_FIRED', [
@@ -215,6 +216,11 @@ class VRPaymentServiceProviderHelper
                 
                 $event->setValue(isset($result['content']) ? $result['content'] : null);
                 $event->setType($type);
+                
+                $this->getLogger(__METHOD__)->error('VRPayment::EventValuesAfterSet', [
+                    'eventGetValue' => $event->getValue(),
+                    'eventGetType' => $event->getType()
+                ]);
             } catch (\Exception $e) {
                 $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentException', [
                     'message' => $e->getMessage(),
