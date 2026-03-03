@@ -214,6 +214,72 @@ class PaymentProcessController extends Controller
         ]);
     }
 
+    /**
+     * Prepare payment for PWA (before order is created)
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function preparePayment(Request $request)
+    {
+        $paymentMethodId = $request->get('paymentMethodId', '');
+        
+        $this->getLogger(__METHOD__)->error('VRPayment::PreparePayment_CALLED', [
+            'paymentMethodId' => $paymentMethodId,
+            'requestData' => $request->all()
+        ]);
+        
+        try {
+            if (empty($paymentMethodId)) {
+                return $this->response->json([
+                    'type' => 'error',
+                    'value' => 'Payment method ID is required'
+                ]);
+            }
+            
+            // Get the payment method
+            $paymentMethod = $this->paymentMethodService->findByPaymentMethodId($paymentMethodId);
+            
+            if (!$paymentMethod) {
+                return $this->response->json([
+                    'type' => 'error',
+                    'value' => 'Payment method not found'
+                ]);
+            }
+            
+            // Check if this is a VR Payment method
+            if (!$this->paymentHelper->isVRPaymentPaymentMopId($paymentMethodId)) {
+                return $this->response->json([
+                    'type' => 'continue',
+                    'value' => ''
+                ]);
+            }
+            
+            // Execute payment from basket (PWA flow)
+            $result = $this->paymentService->executePaymentFromBasket($paymentMethod);
+            
+            $this->getLogger(__METHOD__)->error('VRPayment::PreparePaymentResult', [
+                'result' => $result
+            ]);
+            
+            return $this->response->json([
+                'type' => $result['type'] === GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL ? 'redirect' : ($result['type'] === GetPaymentMethodContent::RETURN_TYPE_ERROR ? 'error' : 'continue'),
+                'value' => $result['content'] ?? ''
+            ]);
+            
+        } catch (\Exception $e) {
+            $this->getLogger(__METHOD__)->error('VRPayment::PreparePaymentException', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            
+            return $this->response->json([
+                'type' => 'error',
+                'value' => 'An error occurred while preparing the payment'
+            ]);
+        }
+    }
+
     public function payOrder(Request $request)
     {
         $orderId = $request->get('orderId', '');

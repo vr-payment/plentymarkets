@@ -69,10 +69,6 @@ class VRPaymentServiceProviderHelper
      * @return never
      */
     public function addGetPaymentMethodContentEventListener() {
-        $this->getLogger(__METHOD__)->error('VRPayment::RegisteringGetPaymentMethodContentListener', [
-            'message' => 'Registering GetPaymentMethodContent listener'
-        ]);
-        
         $this->eventDispatcher->listen(GetPaymentMethodContent::class, function (GetPaymentMethodContent $event) {
             
             $this->getLogger(__METHOD__)->error('VRPayment::GetPaymentMethodContentEvent_FIRED', [
@@ -123,10 +119,6 @@ class VRPaymentServiceProviderHelper
      * @return never
      */
     public function addExecutePaymentContentEventListener() {
-        $this->getLogger(__METHOD__)->error('VRPayment::RegisteringExecutePaymentListener', [
-            'message' => 'Registering ExecutePayment listener'
-        ]);
-        
         $this->eventDispatcher->listen(ExecutePayment::class, function (ExecutePayment $event) {
             
             $this->getLogger(__METHOD__)->error('VRPayment::ExecutePaymentEvent_FIRED', [

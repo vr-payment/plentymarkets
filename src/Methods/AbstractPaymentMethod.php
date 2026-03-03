@@ -65,7 +65,7 @@ abstract class AbstractPaymentMethod extends PaymentMethodService
 
     public function isSwitchableFrom($orderId)
     {
-        return false;
+        return true;
     }
 
     /**
@@ -76,7 +76,24 @@ abstract class AbstractPaymentMethod extends PaymentMethodService
      */
     public function isBackgroundEnabled(): bool
     {
+        /** @var \Plenty\Plugin\Log\Loggable $loggable */
+        $loggable = pluginApp(\Plenty\Plugin\Log\Loggable::class);
+        $loggable->getLogger(__METHOD__)->error('VRPayment::isBackgroundEnabled_CALLED', [
+            'paymentMethod' => get_class($this),
+            'returning' => false
+        ]);
+        
         return false;
+    }
+
+    /**
+     * Check if the payment method should be shown as an icon in checkout.
+     *
+     * @return bool
+     */
+    public function showIconInCheckout(): bool
+    {
+        return true;
     }
 
     /**
@@ -88,7 +105,15 @@ abstract class AbstractPaymentMethod extends PaymentMethodService
      */
     public function getSourceUrl(int $orderId): string
     {
-        // Return empty string - actual redirect happens via ExecutePayment event
+        /** @var \Plenty\Plugin\Log\Loggable $loggable */
+        $loggable = pluginApp(\Plenty\Plugin\Log\Loggable::class);
+        $loggable->getLogger(__METHOD__)->error('VRPayment::getSourceUrl_CALLED', [
+            'orderId' => $orderId,
+            'paymentMethod' => get_class($this)
+        ]);
+        
+        // For PWA: Return URL that triggers payment preparation
+        // This should trigger the ExecutePayment event
         return '';
     }
 
