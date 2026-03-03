@@ -86,10 +86,20 @@ class PaymentHelper
         if (! is_null($paymentMethods)) {
             foreach ($paymentMethods as $paymentMethod) {
                 if ($paymentMethod->id == $mopId) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::IsVRPaymentMopId_TRUE', [
+                        'mopId' => $mopId,
+                        'mopIdType' => gettype($mopId),
+                        'paymentMethodId' => $paymentMethod->id,
+                        'paymentMethodIdType' => gettype($paymentMethod->id)
+                    ]);
                     return true;
                 }
             }
         }
+        
+        $this->getLogger(__METHOD__)->error('VRPayment::IsVRPaymentMopId_FALSE', [
+            'mopId' => $mopId
+        ]);
         return false;
     }
 
@@ -102,13 +112,35 @@ class PaymentHelper
     public function getVRPaymentMethodByMopId($mopId)
     {
         $paymentMethods = $this->paymentMethodRepository->allForPlugin('vRPayment');
+        
+        $methodIds = [];
         if (! is_null($paymentMethods)) {
             foreach ($paymentMethods as $paymentMethod) {
+                $methodIds[] = [
+                    'id' => $paymentMethod->id,
+                    'paymentKey' => $paymentMethod->paymentKey,
+                    'pluginKey' => $paymentMethod->pluginKey ?? 'null'
+                ];
                 if ($paymentMethod->id == $mopId) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::FoundPaymentMethod', [
+                        'mopId' => $mopId,
+                        'paymentMethod' => [
+                            'id' => $paymentMethod->id,
+                            'paymentKey' => $paymentMethod->paymentKey
+                        ]
+                    ]);
                     return $paymentMethod;
                 }
             }
         }
+        
+        $this->getLogger(__METHOD__)->error('VRPayment::PaymentMethodNotFoundInCollection', [
+            'searchingForMopId' => $mopId,
+            'searchingForMopIdType' => gettype($mopId),
+            'availableVRPaymentMethods' => $methodIds,
+            'paymentMethodsIsNull' => is_null($paymentMethods)
+        ]);
+        
         return null;
     }
 
