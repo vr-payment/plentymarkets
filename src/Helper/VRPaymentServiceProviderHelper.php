@@ -167,28 +167,32 @@ class VRPaymentServiceProviderHelper
                     return;
                 }
                 
-                // PWA: orderId is 0 when ExecutePayment fires, need to work with basket
-                if ($event->getOrderId() == 0 || empty($event->getOrderId())) {
-                    $this->getLogger(__METHOD__)->debug('VRPayment::PWABasketPayment', [
-                        'mopId' => $event->getMop()
+                // Check if order exists
+                $orderId = $event->getOrderId();
+                
+                if ($orderId == 0 || empty($orderId)) {
+                    // PWA Pre-order flow: order not created yet
+                    $this->getLogger(__METHOD__)->error('VRPayment::PWABasketPayment_PreOrder', [
+                        'selectedPaymentMethodId' => $selectedPaymentMethodId
                     ]);
                     
-                    // Handle PWA basket-based payment
+                    // Handle PWA basket-based payment (creates transaction, returns redirect)
                     $result = $this->paymentService->executePaymentFromBasket($eventMop);
                     
                 } else {
-                    // Traditional flow: order exists
-                    $eventOrderId = $this->orderRepository->findById($event->getOrderId());
+                    // Order exists: either traditional flow or PWA post-order-creation call
+                    $eventOrderId = $this->orderRepository->findById($orderId);
                     if (!$eventOrderId) {
                         $this->getLogger(__METHOD__)->error('VRPayment::OrderNotFound', [
-                            'orderId' => $event->getOrderId()
+                            'orderId' => $orderId
                         ]);
                         return;
                     }
                     
-                    $this->getLogger(__METHOD__)->error('VRPayment::ExecutingPayment', [
+                    $this->getLogger(__METHOD__)->error('VRPayment::ExecutingPaymentWithOrder', [
                         'orderId' => $eventOrderId->id,
-                        'mopId' => $event->getMop()
+                        'selectedPaymentMethodId' => $selectedPaymentMethodId,
+                        'eventMop' => $event->getMop()
                     ]);
 
                     $result = $this->paymentService->executePayment(
