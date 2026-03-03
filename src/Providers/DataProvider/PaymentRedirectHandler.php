@@ -12,9 +12,17 @@ class PaymentRedirectHandler
     public function call(Twig $twig, $arg): string
     {
         try {
+            $this->getLogger(__METHOD__)->error('VRPayment::PaymentRedirectHandler_CALLED', [
+                'arg' => $arg
+            ]);
+            
             /** @var FrontendSessionStorageFactoryContract $session */
             $session = pluginApp(FrontendSessionStorageFactoryContract::class);
             $redirectUrl = $session->getPlugin()->getValue('vRPaymentPendingRedirectUrl');
+            
+            $this->getLogger(__METHOD__)->error('VRPayment::CheckingForRedirect', [
+                'redirectUrl' => $redirectUrl ?? 'null'
+            ]);
             
             if ($redirectUrl) {
                 // Clear the session value

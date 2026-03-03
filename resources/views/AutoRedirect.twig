@@ -1,7 +1,10 @@
 <script>
     (function() {
         console.log('VR Payment: Redirecting to payment page...');
-        console.log('VR Payment URL: {{ redirectUrl }}');
-        window.location.href = '{{ redirectUrl }}';
+        var redirectUrl = {{ redirectUrl|json_encode|raw }};
+        console.log('VR Payment URL:', redirectUrl);
+        if (redirectUrl) {
+            window.location.href = redirectUrl;
+        }
     })();
 </script>

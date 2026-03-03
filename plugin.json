@@ -59,7 +59,7 @@
 			"key": "VRPayment\\Providers\\DataProvider\\PaymentRedirectHandler",
 			"name": "VR Payment Redirect Handler",
 			"description": "Handles automatic redirect to VR Payment page for PWA checkout.",
-			"defaultLayoutContainer": "Ceres::OrderConfirmation"
+			"defaultLayoutContainer": "Ceres::Script.AfterScriptsLoaded"
 		}
 	]
 }
