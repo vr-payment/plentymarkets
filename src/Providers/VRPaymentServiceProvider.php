@@ -82,6 +82,7 @@ class VRPaymentServiceProvider extends ServiceProvider
         ], 'VRPayment\Procedures\RefundEventProcedure@run');
 
         // Register payment event listeners for PWA
+        $vRPaymentServiceProviderHelper->addAfterOrderCreatedListener();
         $vRPaymentServiceProviderHelper->addGetPaymentMethodContentEventListener();
         $vRPaymentServiceProviderHelper->addExecutePaymentContentEventListener();
 

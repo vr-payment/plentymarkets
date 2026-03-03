@@ -32,7 +32,16 @@
 	"authorIcon": "icon_author_sm.png",
 	"email": "ecommerce@vr-payment.de",
 	"serviceProvider": "VRPayment\\Providers\\VRPaymentServiceProvider",
-	"containers": [],
+	"containers": [
+		{
+			"key": "VRPayment.PWARedirectScript",
+			"name": "VR Payment PWA Redirect Handler",
+			"description": "JavaScript to handle payment redirects in PWA",
+			"multiple": false,
+			"dataProvider": "VRPayment\\Providers\\DataProvider\\PaymentRedirectHandler",
+			"defaultLayoutContainer": "Ceres::Script.Loader"
+		}
+	],
 	"require": {
 		"IO": ">=3.0.0"
 	},
@@ -59,7 +68,7 @@
 			"key": "VRPayment\\Providers\\DataProvider\\PaymentRedirectHandler",
 			"name": "VR Payment Redirect Handler",
 			"description": "Handles automatic redirect to VR Payment page for PWA checkout.",
-			"defaultLayoutContainer": "Ceres::Script.AfterScriptsLoaded"
+			"defaultLayoutContainer": "Ceres::Script.Loader"
 		}
 	]
 }

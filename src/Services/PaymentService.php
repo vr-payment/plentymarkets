@@ -262,10 +262,12 @@ class PaymentService
             
             $result = [
                 'type' => GetPaymentMethodContent::RETURN_TYPE_REDIRECT_URL,
-                'content' => $paymentPageUrl
+                'content' => $paymentPageUrl,
+                'redirectUrl' => $paymentPageUrl, // Additional field for PWA
+                'transactionId' => $transaction['id']
             ];
             
-            $this->getLogger(__METHOD__)->debug('vRPayment::BasketPaymentResult', [
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketPaymentResult', [
                 'result' => $result,
                 'transactionId' => $transaction['id'],
                 'paymentPageUrl' => $paymentPageUrl
