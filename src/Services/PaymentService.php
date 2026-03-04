@@ -205,6 +205,13 @@ class PaymentService
             $tempMerchantRef = 'PWA_' . $basket->sessionId . '_' . time();
             
             // For PWA, use basketForTemplate items (basket.basketItems may be null)
+            $this->getLogger(__METHOD__)->error('vRPayment::ExtractingBasketItems', [
+                'hasBasketForTemplate' => !empty($basketForTemplate),
+                'basketForTemplateKeys' => array_keys($basketForTemplate ?? []),
+                'hasBasketItems' => isset($basketForTemplate['basketItems']),
+                'basketItemsCount' => isset($basketForTemplate['basketItems']) ? count($basketForTemplate['basketItems']) : 0
+            ]);
+            
             $basketItems = $this->getBasketItemsFromTemplate($basketForTemplate);
             
             $parameters = [
@@ -234,9 +241,21 @@ class PaymentService
             
             $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionParameters', $parameters);
             
+            // Log specifically if items are present
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsInParameters', [
+                'hasItemsInBasket' => isset($parameters['basket']['items']),
+                'itemsCount' => isset($parameters['basket']['items']) ? count($parameters['basket']['items']) : 0,
+                'itemsIsArray' => isset($parameters['basket']['items']) ? is_array($parameters['basket']['items']) : false
+            ]);
+            
             $this->session->getPlugin()->unsetKey('vRPaymentTransactionId');
             
             try {
+                $this->getLogger(__METHOD__)->error('vRPayment::CallingSDKCreateTransaction', [
+                    'transactionId' => $transactionId,
+                    'basketAmount' => $basket->basketAmount
+                ]);
+                
                 $transaction = $this->sdkService->call('createTransactionFromBasket', $parameters);
                 
                 $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionCreated', [
