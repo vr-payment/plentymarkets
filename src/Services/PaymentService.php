@@ -215,7 +215,7 @@ class PaymentService
             
             $basketItems = $this->getBasketItems($basket);
             
-            // Build parameters - only include transactionId if it exists
+            // Build parameters - SDK expects basketItems at root level (see createTransactionFromBasket.php line 54)
             $parameters = [
                 'basket' => [
                     'currency' => $basket->currency,
@@ -225,8 +225,8 @@ class PaymentService
                     'shippingAmountNet' => $basket->shippingAmountNet ?? 0,
                     'couponDiscount' => $basket->couponDiscount ?? 0,
                     'paymentAmount' => 0,
-                    'items' => $basketItems, // Items must be INSIDE basket, not at root level
                 ],
+                'basketItems' => $basketItems, // SDK expects this at root level, not inside basket!
                 'basketForTemplate' => $basketForTemplate,
                 'paymentMethod' => [
                     'id' => $paymentMethod->id,
