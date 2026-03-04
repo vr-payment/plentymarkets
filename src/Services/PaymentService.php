@@ -197,7 +197,8 @@ class PaymentService
                 'sessionId' => $basket->sessionId,
                 'methodOfPaymentId' => $basket->methodOfPaymentId ?? 'null',
                 'customerInvoiceAddressId' => $basket->customerInvoiceAddressId ?? 'null',
-                'customerShippingAddressId' => $basket->customerShippingAddressId ?? 'null'
+                'customerShippingAddressId' => $basket->customerShippingAddressId ?? 'null',
+                'basketItemsRaw' => $basket->basketItems // Log the actual basketItems to see if they exist
             ]);
             
             // Generate temporary merchant reference for PWA (order doesn't exist yet)
@@ -209,7 +210,8 @@ class PaymentService
                 'hasBasketForTemplate' => !empty($basketForTemplate),
                 'basketForTemplateKeys' => array_keys($basketForTemplate ?? []),
                 'hasBasketItems' => isset($basketForTemplate['basketItems']),
-                'basketItemsCount' => isset($basketForTemplate['basketItems']) ? count($basketForTemplate['basketItems']) : 0
+                'basketItemsCount' => isset($basketForTemplate['basketItems']) ? count($basketForTemplate['basketItems']) : 0,
+                'fullBasketForTemplate' => $basketForTemplate // Log the entire structure to see where items are
             ]);
             
             $basketItems = $this->getBasketItemsFromTemplate($basketForTemplate);
