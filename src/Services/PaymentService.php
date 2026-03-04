@@ -205,16 +205,15 @@ class PaymentService
             // Use session ID + timestamp to ensure uniqueness
             $tempMerchantRef = 'PWA_' . $basket->sessionId . '_' . time();
             
-            // For PWA, use basketForTemplate items (basket.basketItems may be null)
+            // Extract basket items (should be in $basket->basketItems)
             $this->getLogger(__METHOD__)->error('vRPayment::ExtractingBasketItems', [
-                'hasBasketForTemplate' => !empty($basketForTemplate),
-                'basketForTemplateKeys' => array_keys($basketForTemplate ?? []),
-                'hasBasketItems' => isset($basketForTemplate['basketItems']),
-                'basketItemsCount' => isset($basketForTemplate['basketItems']) ? count($basketForTemplate['basketItems']) : 0,
-                'fullBasketForTemplate' => $basketForTemplate // Log the entire structure to see where items are
+                'hasBasketItems' => isset($basket->basketItems),
+                'basketItemsIsArray' => is_array($basket->basketItems),
+                'basketItemsCount' => is_array($basket->basketItems) ? count($basket->basketItems) : 0,
+                'basketItemsIsNull' => ($basket->basketItems === null)
             ]);
             
-            $basketItems = $this->getBasketItemsFromTemplate($basketForTemplate);
+            $basketItems = $this->getBasketItems($basket);
             
             $parameters = [
                 'transactionId' => $transactionId,
@@ -805,26 +804,33 @@ class PaymentService
     {
         $items = [];
         
-        // Check if basketItems exists and is not null
-        if (!$basket->basketItems || !is_array($basket->basketItems)) {
-            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsNull', [
+        // Check if basketItems exists and is not null/empty
+        // Note: basketItems is often a Collection, not an array
+        if (empty($basket->basketItems)) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsEmpty', [
                 'basketItemsIsNull' => ($basket->basketItems === null),
-                'basketItemsIsArray' => is_array($basket->basketItems),
-                'basketItemsEmpty' => empty($basket->basketItems)
+                'isEmpty' => empty($basket->basketItems)
             ]);
             return [];
         }
         
-        /** @var BasketItem $basketItem */
-        foreach ($basket->basketItems as $basketItem) {
-            $items[] = [
-                'plenty_basket_row_item_variation_id' => $basketItem->variationId,
-                'itemId' => $basketItem->itemId,
-                'name' => $this->getBasketItemName($basketItem),
-                'quantity' => $basketItem->quantity,
-                'price' => $basketItem->price,
-                'vat' => $basketItem->vat
-            ];
+        try {
+            /** @var BasketItem $basketItem */
+            foreach ($basket->basketItems as $basketItem) {
+                $items[] = [
+                    'plenty_basket_row_item_variation_id' => $basketItem->variationId,
+                    'itemId' => $basketItem->itemId,
+                    'name' => $this->getBasketItemName($basketItem),
+                    'quantity' => $basketItem->quantity,
+                    'price' => $basketItem->price,
+                    'vat' => $basketItem->vat
+                ];
+            }
+        } catch (\Exception $e) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsIterationError', [
+                'error' => $e->getMessage()
+            ]);
+            return [];
         }
         
         $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsFormatted', [
