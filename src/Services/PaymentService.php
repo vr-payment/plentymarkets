@@ -204,7 +204,8 @@ class PaymentService
             // Use session ID + timestamp to ensure uniqueness
             $tempMerchantRef = 'PWA_' . $basket->sessionId . '_' . time();
             
-            $basketItems = $this->getBasketItems($basket);
+            // For PWA, use basketForTemplate items (basket.basketItems may be null)
+            $basketItems = $this->getBasketItemsFromTemplate($basketForTemplate);
             
             $parameters = [
                 'transactionId' => $transactionId,
@@ -735,9 +736,64 @@ class PaymentService
      * @param Basket $basket
      * @return array
      */
+    /**
+     * Extract basket items from basketForTemplate (for PWA)
+     * 
+     * @param array $basketForTemplate
+     * @return array
+     */
+    private function getBasketItemsFromTemplate(array $basketForTemplate): array
+    {
+        $items = [];
+        
+        if (!isset($basketForTemplate['basketItems']) || !is_array($basketForTemplate['basketItems'])) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketTemplateItemsNull', [
+                'hasBasketItems' => isset($basketForTemplate['basketItems']),
+                'isArray' => isset($basketForTemplate['basketItems']) ? is_array($basketForTemplate['basketItems']) : false
+            ]);
+            return [];
+        }
+        
+        foreach ($basketForTemplate['basketItems'] as $basketItem) {
+            // basketItem from template is already an array with the data we need
+            if (isset($basketItem['plenty_basket_row_item_variation_id'])) {
+                // Already formatted from template
+                $items[] = $basketItem;
+            } else {
+                // Fallback: format manually if not already formatted
+                $items[] = [
+                    'plenty_basket_row_item_variation_id' => $basketItem['variationId'] ?? 0,
+                    'itemId' => $basketItem['itemId'] ?? 0,
+                    'name' => $basketItem['name'] ?? 'Product',
+                    'quantity' => $basketItem['quantity'] ?? 1,
+                    'price' => $basketItem['price'] ?? 0,
+                    'vat' => $basketItem['vat'] ?? 0
+                ];
+            }
+        }
+        
+        $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsFormatted', [
+            'itemCount' => count($items),
+            'items' => $items
+        ]);
+        
+        return $items;
+    }
+
     private function getBasketItems(Basket $basket): array
     {
         $items = [];
+        
+        // Check if basketItems exists and is not null
+        if (!$basket->basketItems || !is_array($basket->basketItems)) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsNull', [
+                'basketItemsIsNull' => ($basket->basketItems === null),
+                'basketItemsIsArray' => is_array($basket->basketItems),
+                'basketItemsEmpty' => empty($basket->basketItems)
+            ]);
+            return [];
+        }
+        
         /** @var BasketItem $basketItem */
         foreach ($basket->basketItems as $basketItem) {
             $items[] = [
