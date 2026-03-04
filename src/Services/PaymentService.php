@@ -215,8 +215,8 @@ class PaymentService
             
             $basketItems = $this->getBasketItems($basket);
             
+            // Build parameters - only include transactionId if it exists
             $parameters = [
-                'transactionId' => $transactionId,
                 'basket' => [
                     'currency' => $basket->currency,
                     'customerId' => $basket->customerId ?? '',
@@ -239,6 +239,11 @@ class PaymentService
                 'failedUrl' => $this->getFailedUrl(),
                 'checkoutUrl' => $this->getCheckoutUrl()
             ];
+            
+            // Only add transactionId if it exists (not null)
+            if ($transactionId !== null) {
+                $parameters['transactionId'] = $transactionId;
+            }
             
             $this->getLogger(__METHOD__)->error('vRPayment::BasketTransactionParameters', $parameters);
             
