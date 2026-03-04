@@ -804,19 +804,29 @@ class PaymentService
     {
         $items = [];
         
-        // Check if basketItems exists and is not null/empty
-        // Note: basketItems is often a Collection, not an array
-        if (empty($basket->basketItems)) {
-            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsEmpty', [
-                'basketItemsIsNull' => ($basket->basketItems === null),
-                'isEmpty' => empty($basket->basketItems)
-            ]);
+        $this->getLogger(__METHOD__)->error('vRPayment::GetBasketItems_START', [
+            'basketItemsIsNull' => ($basket->basketItems === null),
+            'basketItemsExists' => isset($basket->basketItems)
+        ]);
+        
+        // Skip null check - just try to iterate
+        if ($basket->basketItems === null) {
+            $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsNull');
             return [];
         }
         
         try {
+            $this->getLogger(__METHOD__)->error('vRPayment::BeforeIteration');
+            
             /** @var BasketItem $basketItem */
             foreach ($basket->basketItems as $basketItem) {
+                $this->getLogger(__METHOD__)->error('vRPayment::IteratingBasketItem', [
+                    'variationId' => $basketItem->variationId ?? 'null',
+                    'itemId' => $basketItem->itemId ?? 'null',
+                    'quantity' => $basketItem->quantity ?? 'null',
+                    'price' => $basketItem->price ?? 'null'
+                ]);
+                
                 $items[] = [
                     'plenty_basket_row_item_variation_id' => $basketItem->variationId,
                     'itemId' => $basketItem->itemId,
@@ -826,9 +836,14 @@ class PaymentService
                     'vat' => $basketItem->vat
                 ];
             }
+            
+            $this->getLogger(__METHOD__)->error('vRPayment::AfterIteration', [
+                'itemsExtracted' => count($items)
+            ]);
         } catch (\Exception $e) {
             $this->getLogger(__METHOD__)->error('vRPayment::BasketItemsIterationError', [
-                'error' => $e->getMessage()
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
             ]);
             return [];
         }
