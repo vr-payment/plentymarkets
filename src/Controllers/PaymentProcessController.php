@@ -327,23 +327,30 @@ class PaymentProcessController extends Controller
     {
         try {
             $redirectUrl = $this->frontendSession->getPlugin()->getValue('vRPaymentPendingRedirectUrl');
+            $orderId = $this->frontendSession->getPlugin()->getValue('vRPaymentOrderId');
+            
+            $this->getLogger(__METHOD__)->error('VRPayment::CheckingPendingRedirect', [
+                'redirectUrl' => $redirectUrl ?? 'null',
+                'orderId' => $orderId ?? 'null'
+            ]);
             
             if ($redirectUrl) {
-                // Clear the session value
-                $this->frontendSession->getPlugin()->unsetKey('vRPaymentPendingRedirectUrl');
+                // Don't clear yet - PWA might retry
+                // $this->frontendSession->getPlugin()->unsetKey('vRPaymentPendingRedirectUrl');
                 
                 $this->getLogger(__METHOD__)->error('VRPayment::ReturningPendingRedirect', [
-                    'redirectUrl' => $redirectUrl
+                    'redirectUrl' => $redirectUrl,
+                    'orderId' => $orderId
                 ]);
                 
                 return $this->response->json([
-                    'redirect' => true,
-                    'url' => $redirectUrl
+                    'redirectUrl' => $redirectUrl,
+                    'orderId' => $orderId
                 ]);
             }
             
             return $this->response->json([
-                'redirect' => false
+                'redirectUrl' => null
             ]);
             
         } catch (\Exception $e) {

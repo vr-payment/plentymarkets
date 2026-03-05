@@ -74,7 +74,7 @@ class VRPaymentServiceProviderHelper
             
             $this->getLogger(__METHOD__)->error('VRPayment::OrderCreated_EVENT', [
                 'orderId' => is_object($order) && isset($order->id) ? $order->id : 'unknown',
-                'orderType' => is_object($order) ? get_class($order) : 'not-object'
+                'methodOfPaymentId' => is_object($order) && isset($order->methodOfPaymentId) ? $order->methodOfPaymentId : 'unknown'
             ]);
             
             try {
@@ -82,47 +82,53 @@ class VRPaymentServiceProviderHelper
                     return;
                 }
                 
-                /** @var \Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract $session */
-                $session = pluginApp(\Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract::class);
-                $transactionId = $session->getPlugin()->getValue('vRPaymentTransactionId');
-                $redirectUrl = $session->getPlugin()->getValue('vRPaymentPendingRedirectUrl');
-                
-                $this->getLogger(__METHOD__)->error('VRPayment::AfterOrderCreated_SessionData', [
-                    'orderId' => $order->id,
-                    'transactionId' => $transactionId ?? 'null',
-                    'redirectUrl' => $redirectUrl ?? 'null'
-                ]);
-                
-                // If we have a transaction, associate it with the order now
-                if ($transactionId && $this->paymentHelper->isVRPaymentPaymentMopId($order->methodOfPaymentId ?? 0)) {
-                    
-                    $this->getLogger(__METHOD__)->error('VRPayment::AssociatingTransactionWithOrder', [
+                // Check if this is a VR Payment order
+                if (!$this->paymentHelper->isVRPaymentPaymentMopId($order->methodOfPaymentId ?? 0)) {
+                    $this->getLogger(__METHOD__)->debug('VRPayment::OrderCreated_NotVRPayment', [
                         'orderId' => $order->id,
-                        'transactionId' => $transactionId,
                         'methodOfPaymentId' => $order->methodOfPaymentId ?? 'null'
                     ]);
+                    return;
+                }
+                
+                /** @var \Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract $session */
+                $session = pluginApp(\Plenty\Modules\Frontend\Session\Storage\Contracts\FrontendSessionStorageFactoryContract::class);
+                $selectedMethodId = $session->getPlugin()->getValue('vRPaymentSelectedMethodId');
+                
+                $this->getLogger(__METHOD__)->error('VRPayment::ExecutingPaymentForNewOrder', [
+                    'orderId' => $order->id,
+                    'methodOfPaymentId' => $order->methodOfPaymentId,
+                    'selectedMethodId' => $selectedMethodId ?? 'null'
+                ]);
+                
+                // Get VR Payment method object
+                $paymentMethod = $this->paymentHelper->getVRPaymentMethodByMopId($order->methodOfPaymentId);
+                
+                if (!$paymentMethod) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::PaymentMethodNotFound', [
+                        'methodOfPaymentId' => $order->methodOfPaymentId
+                    ]);
+                    return;
+                }
+                
+                // Execute payment using the existing order-based flow
+                $result = $this->paymentService->executePayment($order, $paymentMethod);
+                
+                $this->getLogger(__METHOD__)->error('VRPayment::PaymentExecutedForNewOrder', [
+                    'orderId' => $order->id,
+                    'resultType' => $result['type'] ?? 'unknown',
+                    'hasContent' => isset($result['content']) && !empty($result['content'])
+                ]);
+                
+                // Store redirect URL in session for PWA plugin to pick up
+                if (isset($result['content']) && !empty($result['content'])) {
+                    $session->getPlugin()->setValue('vRPaymentPendingRedirectUrl', $result['content']);
+                    $session->getPlugin()->setValue('vRPaymentOrderId', $order->id);
                     
-                    // Get transaction from VR Payment API
-                    /** @var \VRPayment\Services\VRPaymentSdkService $sdkService */
-                    $sdkService = pluginApp(\VRPayment\Services\VRPaymentSdkService::class);
-                    $transaction = $sdkService->call('getTransaction', ['id' => $transactionId]);
-                    
-                    if (!is_array($transaction) || !isset($transaction['error'])) {
-                        // Update transaction with order ID
-                        $updateParams = [
-                            'transactionId' => $transactionId,
-                            'orderId' => $order->id
-                        ];
-                        
-                        // Create payment and associate with order
-                        $payment = $this->paymentHelper->createPlentyPayment($transaction);
-                        $this->paymentHelper->assignPlentyPaymentToPlentyOrder($payment, $order->id);
-                        
-                        $this->getLogger(__METHOD__)->error('VRPayment::PaymentAssociatedWithOrder', [
-                            'orderId' => $order->id,
-                            'paymentId' => $payment->id ?? 'unknown'
-                        ]);
-                    }
+                    $this->getLogger(__METHOD__)->error('VRPayment::RedirectUrlStoredInSession', [
+                        'orderId' => $order->id,
+                        'redirectUrl' => $result['content']
+                    ]);
                 }
                 
             } catch (\Exception $e) {
@@ -242,12 +248,20 @@ class VRPaymentServiceProviderHelper
                 
                 if ($orderId == 0 || empty($orderId)) {
                     // PWA Pre-order flow: order not created yet
+                    // Return 'continue' to let PWA create the order first
+                    // Then handle payment in IO.Order.Created event
                     $this->getLogger(__METHOD__)->error('VRPayment::PWABasketPayment_PreOrder', [
-                        'selectedPaymentMethodId' => $selectedPaymentMethodId
+                        'selectedPaymentMethodId' => $selectedPaymentMethodId,
+                        'action' => 'returning continue to let PWA create order'
                     ]);
                     
-                    // Handle PWA basket-based payment (creates transaction, returns redirect)
-                    $result = $this->paymentService->executePaymentFromBasket($eventMop);
+                    // Store the selected VR Payment method in session
+                    $this->session->getPlugin()->setValue('vRPaymentSelectedMethodId', $selectedPaymentMethodId);
+                    
+                    $result = [
+                        'type' => 'continue',
+                        'content' => ''
+                    ];
                     
                 } else {
                     // Order exists: either traditional flow or PWA post-order-creation call
