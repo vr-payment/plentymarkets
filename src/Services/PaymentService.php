@@ -258,8 +258,13 @@ class PaymentService
             
             try {
                 $this->getLogger(__METHOD__)->error('vRPayment::CallingSDKCreateTransaction', [
+                    'method' => 'createTransactionFromBasket',
                     'transactionId' => $transactionId,
-                    'basketAmount' => $basket->basketAmount
+                    'basketAmount' => $basket->basketAmount,
+                    'hasBasketItems' => isset($parameters['basketItems']),
+                    'basketItemsCount' => isset($parameters['basketItems']) ? count($parameters['basketItems']) : 0,
+                    'basketItemsValue' => $parameters['basketItems'] ?? 'not set',
+                    'allParameterKeys' => array_keys($parameters)
                 ]);
                 
                 $transaction = $this->sdkService->call('createTransactionFromBasket', $parameters);
