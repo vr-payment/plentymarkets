@@ -365,6 +365,10 @@ class PaymentService
         /** @var AuthHelper $authHelper */
         $authHelper = pluginApp(AuthHelper::class);
         foreach ($order->orderItems as $orderItem) {
+            // Only variations (typeId 1/2/3) have itemIds; shipping, discounts, and fees are don't
+            if (! in_array($orderItem->typeId, [1, 2, 3])) {
+                continue;
+            }
             if (! empty($orderItem->itemId)) {
                 $itemIdsByOrderItemId[$orderItem->id] = $orderItem->itemId;
                 continue;
