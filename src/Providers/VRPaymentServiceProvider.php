@@ -81,6 +81,8 @@ class VRPaymentServiceProvider extends ServiceProvider
         ], 'VRPayment\Procedures\RefundEventProcedure@run');
 
         $vRPaymentServiceProviderHelper->addExecutePaymentContentEventListener();
+        $vRPaymentServiceProviderHelper->addAfterOrderCreatedListener();
+        $vRPaymentServiceProviderHelper->addGetPaymentMethodContentEventListener();
 
         $cronContainer->add(CronContainer::EVERY_FIFTEEN_MINUTES, WebhookCronHandler::class);
     }

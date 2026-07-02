@@ -1,9 +1,9 @@
 
 
 # VR Payment PlentyONE
-This repository contains the PlentyONE extension that enables to process payments with [VR Payment](https://www.vr-payment.de//).
+This repository contains the PlentyONE extension that enables to process payments with [VR Payment](https://www.vr-payment.de/).
 
-###### To use this extension, a [VR Payment](https://www.vr-payment.de//) account is required.
+###### To use this extension, a [VR Payment](https://www.vr-payment.de/) account is required.
 
 ## Requirements
 
@@ -13,8 +13,15 @@ This repository contains the PlentyONE extension that enables to process payment
 
 ## Documentation
 
-* [Documentation](https://docs.plugin-documentation.vr-payment.de/vr-payment/plentymarkets/2.1.8/docs/en/documentation.html)
+* [Documentation](@WalleeDocPath(/docs/en/documentation.html))
+
+## PWA Installation
+For using the [PlentyONE PWA](https://github.com/plentymarkets/plentyshop-pwa), you'll need to add these files in the PWA project:
+
+*   **Vue Page**: `resources/js/pages/payment-selection/` → `apps/web/app/pages/payment-selection/`
+*   **Client Plugin**: `resources/js/vrpayment.client.ts` → `apps/web/app/plugins/vrpayment.client.ts`
+*   **Middleware**: Update `apps/server/middleware.config.ts` using snippets from `resources/js/middleware.config.ts`.
 
 ## License
 
-Please see the [license file](https://github.com/vr-payment/plentymarkets/blob/2.1.8/LICENSE) for more information.
+Please see the [license file](@WalleeRepoPath(LICENSE)) for more information.
