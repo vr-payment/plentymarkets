@@ -54,12 +54,10 @@ class CreatePaymentMethods
 
     private function createPaymentMethod($id, $name)
     {
-        if ($this->paymentHelper->getPaymentMopId($id) == 'no_paymentmethod_found') {
-            $this->paymentMethodRepositoryContract->createPaymentMethod([
-                'pluginKey' => 'vRPayment',
-                'paymentKey' => (string) $id,
-                'name' => $name
-            ]);
-        }
+        $this->paymentMethodRepositoryContract->createPaymentMethod([
+            'pluginKey' => 'vRPayment',
+            'paymentKey' => (string) $id,
+            'name' => $name
+        ]);
     }
 }
