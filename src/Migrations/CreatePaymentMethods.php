@@ -61,9 +61,9 @@ class CreatePaymentMethods
             $this->paymentMethodRepositoryContract->createPaymentMethod([
                 'pluginKey' => 'vRPayment',
                 'paymentKey' => (string) $id,
-                'name' => $name
+                'name' => "vRPayment:" . $name
             ]);
-            $this->getLogger(__METHOD__)->error('Payment migration successul for payment method ' . $name);
+            $this->getLogger(__METHOD__)->error('Payment migration successful for payment method ' . $name);
         } catch (\Exception $e) {
             $this->getLogger(__METHOD__)->error('Payment migration failed for payment method ' . $name . ': ' . $e->getMessage());
         }
