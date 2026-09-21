@@ -47,7 +47,7 @@ function collectTransactionData($transactionRequest, $client)
         }
     }
 
-    $basketNetPrices = $basketForTemplate['basketAmountNet'] == $basketForTemplate['basketAmount'];
+    $basketNetPrices = $basket['basketAmountNet'] == $basket['basketAmount'];
     $lineItems = [];
     $arrayOfItemIdsInLoop = [];
     $maxTaxRate = 0;
@@ -120,7 +120,8 @@ function collectTransactionData($transactionRequest, $client)
         $lineItems[] = $lineItem;
     }
     $lineItemTotalAmount = VRPaymentSdkHelper::calculateLineItemTotalAmount($lineItems);
-    $basketAmount = $basketForTemplate['basketAmount'];
+    $basketAmount = $basket['basketAmount'];
+    // $basketAmount = $basketNetPrices ? $basketForTemplate['basketAmountNet'] : $basketForTemplate['basketAmount'];
     if (VRPaymentSdkHelper::roundAmount($lineItemTotalAmount, $currencyDecimalPlaces) > VRPaymentSdkHelper::roundAmount($basketAmount, $currencyDecimalPlaces)) {
         $lineItem = new LineItemCreate();
         $lineItem->setUniqueId('adjustment');

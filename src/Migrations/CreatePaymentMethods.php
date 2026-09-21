@@ -2,13 +2,10 @@
 namespace VRPayment\Migrations;
 
 use Plenty\Modules\Payment\Method\Contracts\PaymentMethodRepositoryContract;
-use Plenty\Plugin\Log\Loggable;
 use VRPayment\Helper\PaymentHelper;
 
 class CreatePaymentMethods
 {
-
-    use Loggable;
 
     /**
      *
@@ -57,15 +54,12 @@ class CreatePaymentMethods
 
     private function createPaymentMethod($id, $name)
     {
-        try {
+        if ($this->paymentHelper->getPaymentMopId($id) == 'no_paymentmethod_found') {
             $this->paymentMethodRepositoryContract->createPaymentMethod([
                 'pluginKey' => 'vRPayment',
                 'paymentKey' => (string) $id,
-                'name' => "vRPayment:" . $name
+                'name' => $name
             ]);
-            $this->getLogger(__METHOD__)->error('Payment migration successful for payment method ' . $name);
-        } catch (\Exception $e) {
-            $this->getLogger(__METHOD__)->error('Payment migration failed for payment method ' . $name . ': ' . $e->getMessage());
         }
     }
 }

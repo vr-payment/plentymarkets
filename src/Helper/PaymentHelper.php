@@ -63,7 +63,7 @@ class PaymentHelper
      */
     public function getPaymentMopId($paymentMethodId): string
     {
-        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vRPayment');
+        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vrpayment');
         if (! is_null($paymentMethods)) {
             foreach ($paymentMethods as $paymentMethod) {
                 if ($paymentMethod->paymentKey == $paymentMethodId) {
@@ -82,7 +82,7 @@ class PaymentHelper
      */
     public function isVRPaymentPaymentMopId($mopId): bool
     {
-        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vRPayment');
+        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vrpayment');
         if (! is_null($paymentMethods)) {
             foreach ($paymentMethods as $paymentMethod) {
                 $allMethodsData[] = [
@@ -107,7 +107,7 @@ class PaymentHelper
      */
     public function getVRPaymentPaymentMethodByMopId($mopId)
     {
-        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vRPayment');
+        $paymentMethods = $this->paymentMethodRepository->allForPlugin('vrpayment');
 
         $methodIds = [];
         if (! is_null($paymentMethods)) {

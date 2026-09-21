@@ -4,8 +4,8 @@
     	<p>{{ trans("vRPayment::Template.paymentInformationLabel") }}</p>
     {% endif %}
     
-    {% if transaction.state == 'FULFILL' %}
-    	{% if downloadInvoice %}<p><a href="/vrpayment/download-invoice/{{ transaction.id }}">{{ trans("vRPayment::Template.paymentInformationDownloadInvoice") }}</a></p>{% endif %}
-    	{% if downloadPackingSlip %}<p><a href="/vrpayment/download-packing-slip/{{ transaction.id }}">{{ trans("vRPayment::Template.paymentInformationDownloadPackingSlip") }}</a></p>{% endif %}
+    {% if transaction.state == 'FULFILL' and accessKey %}
+    	{% if downloadInvoice %}<p><a href="/vrpayment/download-invoice/{{ order.id }}/{{ accessKey }}">{{ trans("vRPayment::Template.paymentInformationDownloadInvoice") }}</a></p>{% endif %}
+    	{% if downloadPackingSlip %}<p><a href="/vrpayment/download-packing-slip/{{ order.id }}/{{ accessKey }}">{{ trans("vRPayment::Template.paymentInformationDownloadPackingSlip") }}</a></p>{% endif %}
     {% endif %}
 </div>
