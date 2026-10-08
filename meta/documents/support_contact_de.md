@@ -1,26 +1,19 @@
-## Web page
- 
-Für Informationen zum Plugin oder zum Produkt <a href="https://wallee.com/ueber-wallee/support?_ga=2.171642464.1523640132.1674037856-1834608674.1611572458" target="_blank">kontaktieren Sie unseren Support</a>. 
+## Dokumentation
 
-Sofern Sie bereits ein VR Payment Konto haben, nutzen Sie bitte das Support Fomular im Account
- 
-## Email
+Weitere Dokumentation zu diesem Plugin finden Sie <a href="https://docs.plugin-documentation.vr-payment.de/vr-payment/plentymarkets/2.1.8/docs/en/documentation.html" target="_blank">hier</a>.
+ 
+## Support
 
-Supportzeiten:
-MO - FR, 09.00 - 12.00 / 14.00 - 17.00
+Unser technischer Support ist 24/7 unter der gateway@vr-payment.de oder per Telefon unter der +49 (0)721 1209-66004 erreichbar.
 
-Anschrift:
-customweb GmbH
-General-Guisan-Strasse 47
-CH-8400 Winterthur
+Für Fragen zu Ihrem Vertrag können Sie uns Montag bis Freitag von 8 bis 18 Uhr unter der haendlerservice@vr-payment.de oder telefonisch unter der +49 (0)721 1209-66003 erreichen.
 
- 
-## Telefon
- 
-Switzerland / Rest of the world:
-+41 (0) 44 533 15 70
-+41 (0) 21 510 21 23 (French)
+Für weitere Informationen können Sie unsere <a href="https://www.vr-payment.de/hotline" target="_blank">Website</a> aufsuchen.
+ 
+## Datenschutzerklärung
 
-Deutschland:
-+49 (0) 180 3 729 636
-(9 ct/min landline call. max. rate for mobile calls: 42 ct/min.)
+Die Datenschutzerklärung der VR Payment ist hier <a href="https://www.vr-payment.de/datenschutz/haendler" target="_blank">aufrufbar</a>.
+ 
+## Nutzungsbedingungen
+
+Die Nutzungsbedingungen für dieses Plugin sind hier <a href="https://github.com/vr-payment/plentymarkets/blob/2.1.8/LICENSE" target="_blank">aufrufbar</a>.

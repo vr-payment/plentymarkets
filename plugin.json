@@ -1,59 +1,58 @@
 {
-	"name": "vRPayment",
-	"marketplaceName": {
-		"de": "VR Payment E-Commerce Hub",
-		"en": "VR Payment e-commerce hub"
-	},
-	"namespace": "VRPayment",
-	"type": "payment",
-	"version": "1.0.0",
-	"license": " Apache License Version 2",
-	"isClosedSource": false,
-	"pluginIcon": "icon_plugin_md.png",
-	"price": 0.00,
-	"description": "The official VR Payment plugin for plentymarkets.",
-	"shortDescription": {
-		"de": "Ein Plugin - 50+ PSPs. Mit dem VR Payment Plugin verbinden Sie direkt zu Ihrem gewünschten PSP und akzeptieren Kreditkarten, Rechnungen, SOFORT, Alipay, usw. ",
-		"en": "Connect to over 50+ Payment Service Provider. Process credit cards, Sofort, Paydirekt, PayPal, Alipay, and many more."
-	},
-	"categories": [
-		"3519"
-	],
-	"keywords": [
-		"VR Payment",
-		"plentymarkets",
-		"payment",
-		"VR Payment GmbH",
-		"Concardis",
-		"Computop",
-		"Saferpay"
-	],
-	"author": "VR Payment GmbH",
-	"authorIcon": "icon_author_sm.png",
-	"email": "ecommerce@vr-payment.de",
-	"serviceProvider": "VRPayment\\Providers\\VRPaymentServiceProvider",
-	"containers": [],
-	"require": {
-		"IO": ">=3.0.0"
-	},
-	"platform": {
-		"php": ">=7.3 <8.1"
-	},
-	"dependencies": {
-		"vrpayment/sdk": "4.8.1"
-	},
-	"runOnBuild": [
-		"VRPayment\\Migrations\\CreatePaymentMethods",
-		"VRPayment\\Migrations\\CreateWebhooks",
-		"VRPayment\\Migrations\\CreateWebhookTable",
-		"VRPayment\\Migrations\\UpdateWebhookSpaceId"
-	],
-	"dataProviders": [
-		{
-			"key": "VRPayment\\Providers\\DataProvider\\PaymentInformation",
-			"name": "VR Payment Payment Information",
-			"description": "Display information about the VR Payment payment on the checkout page.",
-			"defaultLayoutContainer": "Ceres::OrderConfirmation.AdditionalPaymentInformation"
-		}
-	]
+  "name": "vRPayment",
+  "marketplaceName": {
+    "de": "Checkout mit VR Payment",
+    "en": "Checkout with VR Payment"
+  },
+  "namespace": "VRPayment",
+  "type": "payment",
+  "version": "2.2.1",
+  "license": " Apache License Version 2",
+  "isClosedSource": false,
+  "pluginIcon": "icon_plugin_md.png",
+  "price": 0.00,
+  "description": "The official VR Payment plugin for plentymarkets.",
+  "shortDescription": {
+    "de": "Integrieren Sie alle Zahlungsarten von VR Payment sicher und nahtlos in Ihren PlentyOne-Shop. Profitieren Sie von einem vollständig integrierten Checkout ohne Weiterleitungen - mobiloptimiert und individuell anpassbar. (PWA-Ready)",
+    "en": "Securely and seamlessly integrate all VR Payment methods into your PlentyOne shop. Benefit from a fully integrated checkout with no redirects—mobile-optimized and customizable. (PWA-Ready)"
+  },
+  "categories": [
+    "3519"
+  ],
+  "keywords": [
+    "VR Payment",
+    "plentymarkets",
+    "payment",
+    "VR Payment GmbH",
+    "Concardis",
+    "Computop",
+    "Saferpay"
+  ],
+  "author": "VR Payment GmbH",
+  "authorIcon": "icon_author_sm.png",
+  "email": "ecommerce@vr-payment.de",
+  "serviceProvider": "VRPayment\\Providers\\VRPaymentServiceProvider",
+  "containers": [],
+  "require": {
+    "IO": ">=3.0.0"
+  },
+  "platform": {
+    "php": ">=7.3 <8.1"
+  },
+  "dependencies": {
+    "vrpayment/sdk": "4.8.1"
+  },
+  "runOnBuild": [
+    "VRPayment\\Migrations\\CreatePaymentMethods",
+    "VRPayment\\Migrations\\CreateWebhooks",
+    "VRPayment\\Migrations\\CreateWebhookTable"
+  ],
+  "dataProviders": [
+    {
+      "key": "VRPayment\\Providers\\DataProvider\\PaymentInformation",
+      "name": "VR Payment Payment Information",
+      "description": "Display information about the VR Payment payment on the checkout page.",
+      "defaultLayoutContainer": "Ceres::OrderConfirmation.AdditionalPaymentInformation"
+    }
+  ]
 }

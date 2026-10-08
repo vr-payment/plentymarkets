@@ -1,9 +1,10 @@
 <?php
-use VRPayment\Sdk\Model\WebhookUrlCreate;
 use VRPayment\Sdk\Model\WebhookListenerCreate;
-use VRPayment\Sdk\Service\WebhookUrlService;
-use VRPayment\Sdk\Service\WebhookListenerService;
 use VRPayment\Sdk\Model\WebhookListenerUpdate;
+use VRPayment\Sdk\Model\WebhookUrlCreate;
+use VRPayment\Sdk\Model\WebhookUrlUpdate;
+use VRPayment\Sdk\Service\WebhookListenerService;
+use VRPayment\Sdk\Service\WebhookUrlService;
 
 require_once __DIR__ . '/VRPaymentSdkHelper.php';
 
@@ -69,19 +70,30 @@ $query->setNumberOfEntities(1);
 $filter = new \VRPayment\Sdk\Model\EntityQueryFilter();
 $filter->setType(\VRPayment\Sdk\Model\EntityQueryFilterType::_AND);
 $filter->setChildren([
-    VRPaymentSdkHelper::createEntityFilter('url', SdkRestApi::getParam('notificationUrl')),
-    VRPaymentSdkHelper::createEntityFilter('state', \VRPayment\Sdk\Model\CreationEntityState::ACTIVE)
+    VRPaymentSdkHelper::createEntityFilter('name', 'plentymarkets ' . SdkRestApi::getParam('storeId')),
+    VRPaymentSdkHelper::createEntityFilter('state', \VRPayment\Sdk\Model\CreationEntityState::ACTIVE),
 ]);
 $query->setFilter($filter);
 $webhookResult = $webhookUrlService->search($spaceId, $query);
 if (empty($webhookResult)) {
+    // If no existing webhook URL is found for this store, we create a new one.
     $webhookUrlRequest = new WebhookUrlCreate();
     $webhookUrlRequest->setState(\VRPayment\Sdk\Model\CreationEntityState::ACTIVE);
     $webhookUrlRequest->setName('plentymarkets ' . SdkRestApi::getParam('storeId'));
     $webhookUrlRequest->setUrl(SdkRestApi::getParam('notificationUrl'));
+    $webhookUrlRequest->setEnablePayloadSignatureAndState(true);
     $webhookUrl = $webhookUrlService->create($spaceId, $webhookUrlRequest);
 } else {
     $webhookUrl = $webhookResult[0];
+    // If the registered URL has changed (e.g. during a plugin update to /rest/v1/),
+    // we update the webhook URL in-place so existing listeners remain valid and active.
+    if ($webhookUrl->getUrl() !== SdkRestApi::getParam('notificationUrl')) {
+        $webhookUrlUpdateRequest = new WebhookUrlUpdate();
+        $webhookUrlUpdateRequest->setId($webhookUrl->getId());
+        $webhookUrlUpdateRequest->setVersion($webhookUrl->getVersion());
+        $webhookUrlUpdateRequest->setUrl(SdkRestApi::getParam('notificationUrl'));
+        $webhookUrl = $webhookUrlService->update($spaceId, $webhookUrlUpdateRequest);
+    }
 }
 
 $query = new \VRPayment\Sdk\Model\EntityQuery();

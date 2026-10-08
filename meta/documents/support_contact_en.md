@@ -1,25 +1,17 @@
-## Web page
- 
-For more information or support please <a href="https://en.wallee.com/about-wallee/support?_ga=2.171642464.1523640132.1674037856-1834608674.1611572458" target="_blank">contact us</a>. 
+## Documentation
 
-In case you do already have a VR Payment account please use the support form in the application.
- 
-## Email
+Additional documentation for this plugin is available <a href="https://docs.plugin-documentation.vr-payment.de/vr-payment/plentymarkets/2.1.8/docs/en/documentation.html" target="_blank">here</a>.
 
-Our support hours:
-MO - FR, 09.00 - 12.00 / 14.00 - 17.00
+## Support
 
-customweb GmbH
-General-Guisan-Strasse 47
-CH-8400 Winterthur
+Our technical support is available 24/7 at gateway@vr-payment.de or by phone at +49 (0)721 1209-66004.
 
- 
-## Phone
- 
-Switzerland / Rest of the world:
-+41 (0) 44 533 15 70
-+41 (0) 21 510 21 23 (French)
+If you have any questions about your contract, you can contact us Monday through Friday from 8 a.m. to 6 p.m. at haendlerservice@vr-payment.de or by phone at +49 (0)721 1209-66003.
 
-Germany:
-+49 (0) 180 3 729 636
-(9 ct/min landline call. max. rate for mobile calls: 42 ct/min.)
+For further information, please visit our <a href="https://www.vr-payment.de/hotline" target="_blank">website</a>.
+ 
+## Privacy Policy
+Enquiries about our privacy policy can be made on the VR Payment privacy policies <a href="https://www.vr-payment.de/datenschutz/haendler" target="_blank">site</a>.
+ 
+## Terms of use
+Enquiries about our terms of use can be made on the VR Payment terms of use <a href="https://github.com/vr-payment/plentymarkets/blob/2.1.8/LICENSE" target="_blank">site</a>.

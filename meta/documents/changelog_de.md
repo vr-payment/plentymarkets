@@ -1,5 +1,17 @@
 # Release Notes for VR Payment
 
+## v2.2.1 (2026-09-29)
+- Zugriffskontrolle für Rechnungs- und Lieferschein-Downloads verstärkt
+- Zugriffskontrolle für Zahlungswiederholung, Warenkorb-Wiederherstellung und Bestell-Checkout-Daten verstärkt
+- Routen für Dokumenten-Downloads werden nun mit und ohne Schrägstrich am Ende registriert
+- Die Erzeugung des Zugriffsschlüssels kann die Bestellbestätigungsseite nicht mehr beeinträchtigen
+- PWA: XMLHttpRequest-Patching auf die Checkout-Seite beschränkt
+
+## v2.2.0 (2026-08-11)
+- Unterstützung für Plenty PWA hinzugefügt
+- Rundung bei Rückerstattungen aus Stabilitätsgründen zurückgenommen
+- Problem behoben, bei dem die Artikel-ID nicht korrekt übertragen wurde
+
 ## v2.1.8 (2026-02-25)
 - Artikelnummer und Varianten-ID in Portaldaten (für Dokumente) getrennt
 - Unterstützung für Webhook-Signaturen hinzugefügt
@@ -77,14 +89,14 @@
 ## v2.0.31 (2022-12-13)
 
 ### Hinzugefügt
-- Weitere Verbesserung von WalleeServiceProviderHelper, die zu stabileren und schnelleren Reaktionszeiten führt, indem die Webhook-Erstellung in die Boot-Funktion verschoben wird
+- Weitere Verbesserung von VRPaymentServiceProviderHelper, die zu stabileren und schnelleren Reaktionszeiten führt, indem die Webhook-Erstellung in die Boot-Funktion verschoben wird
 - Header für API-Tracking hinzugefügt
 - Französische und italienische Sprachen hinzugefügt
 
 ## v2.0.30 (2022-11-29)
 
 ### Fixed
-- Verbesserung des WalleeServiceProvider, was zu stabileren und schnelleren Reaktionszeiten führt
+- Verbesserung des VRPaymentServiceProvider, was zu stabileren und schnelleren Reaktionszeiten führt
 
 ## v2.0.29 (2022-10-07)
 
