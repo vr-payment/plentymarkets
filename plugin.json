@@ -44,7 +44,6 @@
   },
   "runOnBuild": [
     "VRPayment\\Migrations\\CreatePaymentMethods",
-    "VRPayment\\Migrations\\CreateWebhooks",
     "VRPayment\\Migrations\\CreateWebhookTable"
   ],
   "dataProviders": [
