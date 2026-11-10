@@ -162,10 +162,24 @@ class VRPaymentServiceProviderHelper
                     return;
                 }
 
+                // Re-fetch the order so that orderItems and amounts relations are fully loaded.
+                // $event->getOrder() returns a thin object without eager-loaded relations, which
+                // causes createTransactionFromOrder to see an empty orderItems array and collapse
+                // the entire order total into a single adjustment line item.
+                $fullOrder = $this->orderRepository->findOrderById($order->id);
+                if (!$fullOrder) {
+                    $this->getLogger(__METHOD__)->error('VRPayment::OrderRefetchFailed', [
+                        'orderId' => $order->id,
+                    ]);
+                    return;
+                }
+
                 $transactionId = $this->session->getPlugin()->getValue('vRPaymentTransactionId');
 
-                // Link the basket-level transaction to the newly created order
-                if ($transactionId) {
+                // Link the basket-level transaction to the newly created order. An order with nothing
+                // to pay is completed without a transaction, so a basket transaction left over from
+                // before the coupon was applied must not be linked to it.
+                if ($transactionId && !$this->paymentService->isZeroAmountOrder($fullOrder)) {
                     try {
                         /** @var \VRPayment\Services\VRPaymentSdkService $sdkService */
                         $sdkService = pluginApp(\VRPayment\Services\VRPaymentSdkService::class);
@@ -184,18 +198,6 @@ class VRPaymentServiceProviderHelper
                 if (!$paymentMethod) {
                     $this->getLogger(__METHOD__)->error('VRPayment::PaymentMethodNotFound', [
                         'methodOfPaymentId' => $order->methodOfPaymentId,
-                    ]);
-                    return;
-                }
-
-                // Re-fetch the order so that orderItems and amounts relations are fully loaded.
-                // $event->getOrder() returns a thin object without eager-loaded relations, which
-                // causes createTransactionFromOrder to see an empty orderItems array and collapse
-                // the entire order total into a single adjustment line item.
-                $fullOrder = $this->orderRepository->findOrderById($order->id);
-                if (!$fullOrder) {
-                    $this->getLogger(__METHOD__)->error('VRPayment::OrderRefetchFailed', [
-                        'orderId' => $order->id,
                     ]);
                     return;
                 }
