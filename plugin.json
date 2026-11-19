@@ -37,7 +37,7 @@
     "IO": ">=3.0.0"
   },
   "platform": {
-    "php": ">=7.3 <8.1"
+    "php": ">=7.3 <8.4"
   },
   "dependencies": {
     "vrpayment/sdk": "4.8.1"
