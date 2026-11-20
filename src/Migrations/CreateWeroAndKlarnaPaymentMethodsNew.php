@@ -13,7 +13,7 @@ use VRPayment\Helper\PaymentHelper;
  * new createPaymentMethod() calls to an already-executed class has no effect - hence a separate
  * migration class, which plentymarkets has never seen and will therefore run on the next deploy.
  */
-class CreateWeroAndKlarnaPaymentMethods
+class CreateWeroAndKlarnaPaymentMethodsNew
 {
 
     use Loggable;
