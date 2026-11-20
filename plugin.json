@@ -46,7 +46,8 @@
     "VRPayment\\Migrations\\CreatePaymentMethods",
     "VRPayment\\Migrations\\CreateWeroAndKlarnaPaymentMethods",
     "VRPayment\\Migrations\\CreateWebhooks",
-    "VRPayment\\Migrations\\CreateWebhookTable"
+    "VRPayment\\Migrations\\CreateWebhookTable",
+    "VRPayment\\Migrations\\CreateWeroAndKlarnaPaymentMethodsNew"
   ],
   "dataProviders": [
     {
